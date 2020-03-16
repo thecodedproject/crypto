@@ -2,33 +2,83 @@ package main
 
 import (
 	"context"
+	"encoding/json"
+	"flag"
+	"fmt"
+	"github.com/shopspring/decimal"
+	"github.com/thecodedproject/crypto/exchangesdk"
 	"github.com/thecodedproject/crypto/exchangesdk/luno"
+	"github.com/thecodedproject/crypto/io"
+	"github.com/thecodedproject/crypto/profitloss"
 	"log"
 )
 
+var (
+	authPath = flag.String("auth", "api_auth.json", "Path to auth config json file")
+)
+
+const (
+	MAX_TRADE_PAGES = 100
+)
+
+func getAllTrades(ctx context.Context, c exchangesdk.Client) []exchangesdk.Trade {
+
+	trades := make([]exchangesdk.Trade, 0)
+	for page:=int64(1); page<=MAX_TRADE_PAGES; page++ {
+
+		tradesForPage, err := c.GetTrades(ctx, page)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		trades = append(trades, tradesForPage...)
+
+		if len(tradesForPage) < 100 {
+			break
+		}
+
+		if page == MAX_TRADE_PAGES {
+			log.Fatal("Max pages of trades reached!!")
+		}
+	}
+
+	return trades
+}
+
 func main() {
 
-	ctx := context.Background()
+	flag.Parse()
 
+	auth, err := io.ReadAuthFile(*authPath)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	ctx := context.Background()
 	c, err := luno.NewClient(
 		ctx,
-		"c2z6nzka7g2tp",
-		"IuDNIAoezXut3iJ8mjvwWp9GB_4nj3TdiBtK1hgGN4Q")
+		auth.ApiKey,
+		auth.ApiSecret)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	trades, err := c.GetTrades(ctx, 0)
+	trades := getAllTrades(ctx, c)
+
+	var report profitloss.Report
+	report = profitloss.Add(report, trades...)
+
+	marketPrice, err := c.LatestPrice(ctx)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	for _, t := range trades {
-		log.Printf("%+v", t)
+	fullReport := profitloss.FullReport(report, marketPrice)
+
+	reportJson, err := json.Marshal(&fullReport)
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	log.Printf("Num trades:", len(trades))
-
-
-	log.Println("success")
+	fmt.Println(string(reportJson))
 }

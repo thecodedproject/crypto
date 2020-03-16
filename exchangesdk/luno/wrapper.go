@@ -164,17 +164,6 @@ func (l* client) GetTrades(ctx context.Context, page int64) ([]exchangesdk.Trade
 			fmt.Sprintf("Cannot get page less than 1; trying to get page %d", page))
 	}
 
-/*
-	t, ok := l.tradesByPage[page]
-	if ok {
-		return t, nil
-	}
-
-	previousPage := page - 1
-	previousPageTrades, ok := l.tradesByPage[page-1]
-
-*/
-
 	t, ok := l.tradesByPage[page]
 	if ok {
 		return t.Trades, nil
@@ -192,14 +181,12 @@ func (l* client) GetTrades(ctx context.Context, page int64) ([]exchangesdk.Trade
 		}
 
 		previousPageTrades, ok := l.tradesByPage[page-1]
-		// If not ok - previous page was not full, spo return empty??
 		if !ok {
 			return []exchangesdk.Trade{}, nil
 		}
 
 		req.AfterSeq = previousPageTrades.SequenceOfLastTrade
 	}
-
 
 	res, err := l.lunoSdk.ListUserTrades(ctx, &req)
 	if err != nil {

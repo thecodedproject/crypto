@@ -2,16 +2,16 @@ package profitloss_test
 
 import (
 	"fmt"
-	"github.com/thecodedproject/profitloss"
+	"github.com/thecodedproject/crypto/exchangesdk"
+	"github.com/thecodedproject/crypto/profitloss"
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
-	//"github.com/stretchr/testify/require"
 	"testing"
 )
 
 const (
-	Bid = profitloss.OrderTypeBid
-	Ask = profitloss.OrderTypeAsk
+	Bid = exchangesdk.OrderTypeBid
+	Ask = exchangesdk.OrderTypeAsk
 )
 
 func assertDecimalsEqual(t *testing.T, expected, actual decimal.Decimal, i ...interface{}) {
@@ -216,12 +216,26 @@ func TestAveragePriceReport_TotalVolume(t *testing.T) {
 	assertDecimalsEqual(t, D(52.7), r.TotalVolume())
 }
 
-func TestAddOrdersToAveragePriceReport(t *testing.T) {
+func TestAveragePriceReport_TotalGain(t *testing.T) {
+	r := profitloss.Report{
+		BaseBought: D(22.5),
+		BaseSold: D(16.0),
+		CounterBought: D(3375.0),
+		CounterSold: D(3375.0),
+		BaseFees: D(1.0),
+		CounterFees: D(25.5),
+	}
+
+	marketPrice := D(130.75)
+	assertDecimalsEqual(t, D(946.0), r.TotalGain(marketPrice))
+}
+
+func TestAddTradesToAveragePriceReport(t *testing.T) {
 
 	testCases := []struct {
 		Name string
 		Inital profitloss.Report
-		Orders []profitloss.CompletedOrder
+		Trades []exchangesdk.Trade
 		Expected profitloss.Report
 	}{
 		{
@@ -229,7 +243,7 @@ func TestAddOrdersToAveragePriceReport(t *testing.T) {
 		},
 		{
 			Name: "Multiple buy and sell orders with more buy volume than sell volume uses avterage prices and total volume sold for realised gain",
-			Orders: []profitloss.CompletedOrder{
+			Trades: []exchangesdk.Trade{
 				{
 					Price: D(100.0),
 					Volume: D(15.0),
@@ -261,7 +275,7 @@ func TestAddOrdersToAveragePriceReport(t *testing.T) {
 		},
 		{
 			Name: "Multiple buy and sell orders with more sell volume than buy volume uses average prices and total buy volume",
-			Orders: []profitloss.CompletedOrder{
+			Trades: []exchangesdk.Trade{
 				{
 					Price: D(150.0),
 					Volume: D(15.0),
@@ -293,7 +307,7 @@ func TestAddOrdersToAveragePriceReport(t *testing.T) {
 		},
 		{
 			Name: "Multiple buy and sell orders with some base fees remove base fees from base balance",
-			Orders: []profitloss.CompletedOrder{
+			Trades: []exchangesdk.Trade{
 				{
 					Price: D(100.0),
 					Volume: D(5.0),
@@ -330,7 +344,7 @@ func TestAddOrdersToAveragePriceReport(t *testing.T) {
 		},
 		{
 			Name: "Multiple buy and sell orders with some counter fees remove base fees from counter balance and realised gain",
-			Orders: []profitloss.CompletedOrder{
+			Trades: []exchangesdk.Trade{
 				{
 					Price: D(200.26),
 					Volume: D(5.0),
@@ -369,7 +383,7 @@ func TestAddOrdersToAveragePriceReport(t *testing.T) {
 
 	for _, test := range testCases {
 		t.Run(test.Name, func(t *testing.T) {
-			report := profitloss.Add(test.Inital, test.Orders...)
+			report := profitloss.Add(test.Inital, test.Trades...)
 			assertReportsEqual(t, test.Expected, report)
 		})
 	}

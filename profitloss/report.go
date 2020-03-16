@@ -2,6 +2,7 @@ package profitloss
 
 import (
 	"github.com/shopspring/decimal"
+	"github.com/thecodedproject/crypto/exchangesdk"
 )
 
 type CalcType int
@@ -12,21 +13,6 @@ const (
 	calcTypeSentinal = 2
 )
 
-type OrderType string
-
-const (
-	OrderTypeBid = "BID"
-	OrderTypeAsk = "ASK"
-)
-
-type CompletedOrder struct {
-	Price decimal.Decimal
-	Volume decimal.Decimal
-	BaseFee decimal.Decimal
-	CounterFee decimal.Decimal
-	Type OrderType
-}
-
 type Report struct {
 	Type CalcType `json:"type"`
 	BaseBought decimal.Decimal `json:"base_bought"`
@@ -36,6 +22,32 @@ type Report struct {
 	CounterSold decimal.Decimal `json:"counter_sold"`
 	CounterFees decimal.Decimal `json:"counter_fees"`
 	OrderCount int64 `json:"order_count"`
+}
+
+type fullReport struct {
+	Report
+	RealisedGain decimal.Decimal `json:"realised_gain"`
+	UnrealisedGain decimal.Decimal `json:"unrealised_gain"`
+	AverageBuyPrice decimal.Decimal `json:"averagebuy_price"`
+	AverageSellPrice decimal.Decimal `json:"averagesell_price"`
+	BaseBalance decimal.Decimal `json:"base_balance"`
+	CounterBalance decimal.Decimal `json:"counter_balance"`
+	TotalVolume decimal.Decimal `json:"total_volume"`
+	TotalGain decimal.Decimal `json:"total_gain"`
+}
+
+func FullReport(r Report, marketPrice decimal.Decimal) fullReport {
+	return fullReport{
+		Report: r,
+		RealisedGain: r.RealisedGain(),
+		UnrealisedGain: r.UnrealisedGain(marketPrice),
+		AverageBuyPrice: r.AverageBuyPrice(),
+		AverageSellPrice: r.AverageSellPrice(),
+		BaseBalance: r.BaseBalance(),
+		CounterBalance: r.CounterBalance(),
+		TotalVolume: r.TotalVolume(),
+		TotalGain: r.TotalGain(marketPrice),
+	}
 }
 
 func (r Report) RealisedGain() decimal.Decimal {
@@ -67,12 +79,16 @@ func (r Report) TotalVolume() decimal.Decimal {
 	return r.BaseSold.Add(r.BaseBought)
 }
 
-func Add(r Report, orders ...CompletedOrder) Report {
+func (r Report) TotalGain(marketPrice decimal.Decimal) decimal.Decimal {
+	return r.RealisedGain().Add(r.UnrealisedGain(marketPrice))
+}
 
-	for _, o := range orders {
+func Add(r Report, trades ...exchangesdk.Trade) Report {
+
+	for _, o := range trades {
 		orderCost := o.Volume.Mul(o.Price)
 
-		if o.Type == OrderTypeBid {
+		if o.Type == exchangesdk.OrderTypeBid {
 			r.BaseBought = r.BaseBought.Add(o.Volume)
 			r.CounterSold = r.CounterSold.Add(orderCost)
 		}	else {
