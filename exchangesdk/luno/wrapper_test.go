@@ -12,10 +12,10 @@ import (
 	luno_sdk "github.com/luno/luno-go"
 )
 
-func makeSomeLunoTrades(n int64) []luno_sdk.Trade {
+func makeSomeLunoTrades(n int64, offset int64) []luno_sdk.Trade {
 
 	trades := make([]luno_sdk.Trade, 0, n)
-	for i:=int64(0); i<n; i++ {
+	for i:=offset; i<(n+offset); i++ {
 		trades = append(trades, luno_sdk.Trade{
 			OrderId: strconv.FormatInt(i, 10),
 			Sequence: i,
@@ -108,7 +108,7 @@ func TestGetTradesFirstPageMultipleTimesWhenFullOfTradesMultipleTimesOnlyCallsLi
 		Pair: luno.TRADINGPAIR,
 	}
 	res := luno_sdk.ListUserTradesResponse{
-		Trades: makeSomeLunoTrades(100),
+		Trades: makeSomeLunoTrades(100, 0),
 	}
 	m.On("ListUserTrades", mock.Anything, req).Return(&res, nil).Once()
 
@@ -133,7 +133,7 @@ func TestGetTradesSecondPageWhenFirstPageIsFull(t *testing.T) {
 		Pair: luno.TRADINGPAIR,
 	}
 	firstRes := luno_sdk.ListUserTradesResponse{
-		Trades: makeSomeLunoTrades(100),
+		Trades: makeSomeLunoTrades(100, 0),
 	}
 	m.On("ListUserTrades", mock.Anything, &firstReq).Return(&firstRes, nil)
 
@@ -173,7 +173,7 @@ func TestRepeatedlyGetTradesForSecondPageWhenFirstPageIsFullRequestsFirstPageOnc
 		Pair: luno.TRADINGPAIR,
 	}
 	firstRes := luno_sdk.ListUserTradesResponse{
-		Trades: makeSomeLunoTrades(100),
+		Trades: makeSomeLunoTrades(100, 0),
 	}
 	m.On("ListUserTrades", mock.Anything, &firstReq).Return(&firstRes, nil).Once()
 
@@ -213,6 +213,63 @@ func TestRepeatedlyGetTradesForSecondPageWhenFirstPageIsFullRequestsFirstPageOnc
 	assert.Equal(t, expected, trades)
 }
 
+func TestRepeatedlyGetTradesForThridPageWhenSecondANdFirstPageIsFullRequestsThosePagesOnce(t *testing.T) {
+
+	m := new(luno.MockLunoSdk)
+
+	firstReq := luno_sdk.ListUserTradesRequest{
+		Pair: luno.TRADINGPAIR,
+	}
+	firstRes := luno_sdk.ListUserTradesResponse{
+		Trades: makeSomeLunoTrades(100, 0),
+	}
+	m.On("ListUserTrades", mock.Anything, &firstReq).Return(&firstRes, nil).Once()
+
+	secondReq := luno_sdk.ListUserTradesRequest{
+		Pair: luno.TRADINGPAIR,
+		AfterSeq: 99,
+	}
+	secondRes := luno_sdk.ListUserTradesResponse{
+		Trades: makeSomeLunoTrades(100, 100),
+	}
+	m.On("ListUserTrades", mock.Anything, &secondReq).Return(&secondRes, nil).Once()
+
+	thirdReq := luno_sdk.ListUserTradesRequest{
+		Pair: luno.TRADINGPAIR,
+		AfterSeq: 199,
+	}
+	thirdRes := luno_sdk.ListUserTradesResponse{
+		Trades: []luno_sdk.Trade{
+			{
+				OrderId: "301",
+				Sequence: 301,
+			},
+		},
+	}
+	m.On("ListUserTrades", mock.Anything, &thirdReq).Return(&thirdRes, nil).Times(3)
+
+	expected := []exchangesdk.Trade{
+		{
+			OrderId: "301",
+		},
+	}
+
+	ctx := context.Background()
+	c := luno.NewClientForTesting(t, m, 12, 34)
+
+	trades, err := c.GetTrades(ctx, 3)
+	require.NoError(t, err)
+	assert.Equal(t, expected, trades)
+
+	trades, err = c.GetTrades(ctx, 3)
+	require.NoError(t, err)
+	assert.Equal(t, expected, trades)
+
+	trades, err = c.GetTrades(ctx, 3)
+	require.NoError(t, err)
+	assert.Equal(t, expected, trades)
+}
+
 func TestGetTradesThirdPageWhenSecondPageIsNotFullReturnsEmpty(t *testing.T) {
 
 	m := new(luno.MockLunoSdk)
@@ -221,7 +278,7 @@ func TestGetTradesThirdPageWhenSecondPageIsNotFullReturnsEmpty(t *testing.T) {
 		Pair: luno.TRADINGPAIR,
 	}
 	firstRes := luno_sdk.ListUserTradesResponse{
-		Trades: makeSomeLunoTrades(100),
+		Trades: makeSomeLunoTrades(100, 0),
 	}
 	m.On("ListUserTrades", mock.Anything, &firstReq).Return(&firstRes, nil).Once()
 

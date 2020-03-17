@@ -199,7 +199,7 @@ func (l* client) GetTrades(ctx context.Context, page int64) ([]exchangesdk.Trade
 	}
 
 	if len(trades) == 100 {
-		l.tradesByPage[1] = tradesAndLastSeq{
+		l.tradesByPage[page] = tradesAndLastSeq{
 			Trades: trades,
 			SequenceOfLastTrade: res.Trades[99].Sequence,
 		}
