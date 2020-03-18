@@ -33,8 +33,8 @@ func LogicallyEqual(t *testing.T, a, b interface{}, s ...interface{}) bool {
 				aField := aValue.Field(i).Interface()
 				bField := bValue.Field(i).Interface()
 
-				s = append(s, fieldName)
-				retVal = retVal && LogicallyEqual(t, aField, bField, s)
+				messageAndFieldName := append(s, "."+fieldName)
+				retVal = retVal && LogicallyEqual(t, aField, bField, messageAndFieldName...)
 				publicFields++
 			}
 		}
