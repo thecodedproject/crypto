@@ -1,6 +1,7 @@
 package util
 
 import (
+	"fmt"
 	"github.com/shopspring/decimal"
   "github.com/stretchr/testify/assert"
 	"reflect"
@@ -15,8 +16,9 @@ func LogicallyEqual(t *testing.T, a, b interface{}, s ...interface{}) bool {
 
 	if isShopspringDecimal(aType) && isShopspringDecimal(bType) {
 
+		message := fmt.Sprint(s...)
 		return assert.Equalf(t, 0, a.(decimal.Decimal).Cmp(b.(decimal.Decimal)),
-			"Decimals not equal.\n\tExpected: %s\n\tActual: %s", a, b)
+			"%s: Decimals not equal.\n\tExpected: %s\n\tActual: %s", message, a, b)
 
 	}
 	if aType == bType && aType.Kind() == reflect.Struct {
