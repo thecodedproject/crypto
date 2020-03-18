@@ -24,17 +24,20 @@ func LogicallyEqual(t *testing.T, a, b interface{}, s ...interface{}) bool {
 		aValue := reflect.ValueOf(a)
 		bValue := reflect.ValueOf(b)
 		retVal := true
+		publicFields := 0
 		for i:=0; i<aType.NumField(); i++ {
 			if aValue.Field(i).CanInterface() {
 				aField := aValue.Field(i).Interface()
 				bField := bValue.Field(i).Interface()
 
 				retVal = retVal && LogicallyEqual(t, aField, bField, s)
+				publicFields++
 			}
 		}
 
-		return retVal
-
+		if publicFields > 0 {
+			return retVal
+		}
 	}
 
 	return assert.Equal(t, a, b, s...)
