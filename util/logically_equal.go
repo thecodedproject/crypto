@@ -27,9 +27,11 @@ func LogicallyEqual(t *testing.T, a, b interface{}, s ...interface{}) bool {
 		publicFields := 0
 		for i:=0; i<aType.NumField(); i++ {
 			if aValue.Field(i).CanInterface() {
+				fieldName := aType.Field(i).Name
 				aField := aValue.Field(i).Interface()
 				bField := bValue.Field(i).Interface()
 
+				s = append(s, fieldName)
 				retVal = retVal && LogicallyEqual(t, aField, bField, s)
 				publicFields++
 			}
