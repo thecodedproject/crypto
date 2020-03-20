@@ -24,7 +24,7 @@ type Report struct {
 	OrderCount int64 `json:"order_count"`
 }
 
-type fullReport struct {
+type FullReport struct {
 	Report
 	RealisedGain decimal.Decimal `json:"realised_gain"`
 	UnrealisedGain decimal.Decimal `json:"unrealised_gain"`
@@ -36,8 +36,8 @@ type fullReport struct {
 	TotalGain decimal.Decimal `json:"total_gain"`
 }
 
-func FullReport(r Report, marketPrice decimal.Decimal) fullReport {
-	return fullReport{
+func GenerateFullReport(r Report, marketPrice decimal.Decimal) FullReport {
+	return FullReport{
 		Report: r,
 		RealisedGain: r.RealisedGain(),
 		UnrealisedGain: r.UnrealisedGain(marketPrice),

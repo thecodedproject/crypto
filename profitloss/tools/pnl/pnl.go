@@ -72,7 +72,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fullReport := profitloss.FullReport(report, marketPrice)
+	fullReport := profitloss.GenerateFullReport(report, marketPrice)
 
 	reportJson, err := json.Marshal(&fullReport)
 	if err != nil {

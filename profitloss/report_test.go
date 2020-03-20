@@ -443,6 +443,6 @@ func TestAddTradesToAveragePriceReport(t *testing.T) {
 func TestFullReportWithEmptyReportReturnsZeroForAllFields(t *testing.T) {
 
 	var r profitloss.Report
-	fr := profitloss.FullReport(r, D(150.0))
+	fr := profitloss.GenerateFullReport(r, D(150.0))
 	assert.True(t, fr.TotalGain.IsZero())
 }
