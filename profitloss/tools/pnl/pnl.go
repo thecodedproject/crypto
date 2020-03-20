@@ -72,9 +72,9 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fullReport := profitloss.GenerateFullReport(report, marketPrice)
+	snapshot := profitloss.GenerateSnapshot(report, marketPrice)
 
-	reportJson, err := json.Marshal(&fullReport)
+	reportJson, err := json.Marshal(&snapshot)
 	if err != nil {
 		log.Fatal(err)
 	}

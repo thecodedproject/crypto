@@ -440,9 +440,9 @@ func TestAddTradesToAveragePriceReport(t *testing.T) {
 	}
 }
 
-func TestFullReportWithEmptyReportReturnsZeroForAllFields(t *testing.T) {
+func TestGenerateSnapshotWithEmptyReportReturnsZeroForAllFields(t *testing.T) {
 
 	var r profitloss.Report
-	fr := profitloss.GenerateFullReport(r, D(150.0))
-	assert.True(t, fr.TotalGain.IsZero())
+	snapshot := profitloss.GenerateSnapshot(r, D(150.0))
+	assert.True(t, snapshot.TotalGain.IsZero())
 }
