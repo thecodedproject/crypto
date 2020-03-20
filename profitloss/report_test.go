@@ -39,12 +39,34 @@ func D(f float64) decimal.Decimal {
 }
 
 func TestAveragePriceReport_AverageBuyPrice(t *testing.T) {
-	r := profitloss.Report{
-		BaseBought: D(22.5),
-		CounterSold: D(3375.0),
+
+	testCases := []struct{
+		Name string
+		Report profitloss.Report
+		AverageBuyPrice decimal.Decimal
+	}{
+		{
+			Name: "Positive value",
+			Report: profitloss.Report{
+				BaseBought: D(22.5),
+				CounterSold: D(3375.0),
+			},
+			AverageBuyPrice: D(150.0),
+		},
+		{
+			Name: "Zero base bought returns zero",
+			Report: profitloss.Report{
+				CounterSold: D(3375.0),
+			},
+			AverageBuyPrice: D(0.0),
+		},
 	}
 
-	assertDecimalsEqual(t, D(150.0), r.AverageBuyPrice())
+	for _, test := range testCases {
+		t.Run(test.Name, func(t *testing.T) {
+			assertDecimalsEqual(t, test.AverageBuyPrice, test.Report.AverageBuyPrice())
+		})
+	}
 }
 
 func TestAveragePriceReport_AverageSellPrice(t *testing.T) {
@@ -54,6 +76,35 @@ func TestAveragePriceReport_AverageSellPrice(t *testing.T) {
 	}
 
 	assertDecimalsEqual(t, D(163.75), r.AverageSellPrice())
+
+
+	testCases := []struct{
+		Name string
+		Report profitloss.Report
+		AverageSellPrice decimal.Decimal
+	}{
+		{
+			Name: "Positive value",
+			Report: profitloss.Report{
+				BaseSold: D(16.0),
+				CounterBought: D(2620.0),
+			},
+			AverageSellPrice: D(163.75),
+		},
+		{
+			Name: "Zero base bought returns zero",
+			Report: profitloss.Report{
+				CounterBought: D(3375.0),
+			},
+			AverageSellPrice: D(0.0),
+		},
+	}
+
+	for _, test := range testCases {
+		t.Run(test.Name, func(t *testing.T) {
+			assertDecimalsEqual(t, test.AverageSellPrice, test.Report.AverageSellPrice())
+		})
+	}
 }
 
 func TestAveragePriceReport_RealisedGain(t *testing.T) {
@@ -119,7 +170,7 @@ func TestAveragePriceReport_UnrealisedGain(t *testing.T) {
 				CounterSold: D(3375.0),
 			},
 			MarketPrice: D(127.25),
-			UnrealisedGain: D(-3.5),
+			UnrealisedGain: D(-147.875),
 		},
 		{
 			Name: "With base fees",
@@ -130,7 +181,7 @@ func TestAveragePriceReport_UnrealisedGain(t *testing.T) {
 				BaseFees: D(1.0),
 			},
 			MarketPrice: D(130.75),
-			UnrealisedGain: D(-3.5),
+			UnrealisedGain: D(-105.875),
 		},
 	}
 
@@ -227,7 +278,7 @@ func TestAveragePriceReport_TotalGain(t *testing.T) {
 	}
 
 	marketPrice := D(130.75)
-	assertDecimalsEqual(t, D(946.0), r.TotalGain(marketPrice))
+	assertDecimalsEqual(t, D(843.625), r.TotalGain(marketPrice))
 }
 
 func TestAddTradesToAveragePriceReport(t *testing.T) {
@@ -389,3 +440,9 @@ func TestAddTradesToAveragePriceReport(t *testing.T) {
 	}
 }
 
+func TestFullReportWithEmptyReportReturnsZeroForAllFields(t *testing.T) {
+
+	var r profitloss.Report
+	fr := profitloss.FullReport(r, D(150.0))
+	assert.True(t, fr.TotalGain.IsZero())
+}

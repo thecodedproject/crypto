@@ -56,14 +56,20 @@ func (r Report) RealisedGain() decimal.Decimal {
 }
 
 func (r Report) UnrealisedGain(marketPrice decimal.Decimal) decimal.Decimal {
-	return marketPrice.Sub(r.AverageBuyPrice()).Div(r.BaseBalance())
+	return marketPrice.Sub(r.AverageBuyPrice()).Mul(r.BaseBalance())
 }
 
 func (r Report) AverageBuyPrice() decimal.Decimal {
+	if r.BaseBought.IsZero() {
+		return decimal.Decimal{}
+	}
 	return r.CounterSold.Div(r.BaseBought)
 }
 
 func (r Report) AverageSellPrice() decimal.Decimal {
+	if r.BaseSold.IsZero() {
+		return decimal.Decimal{}
+	}
 	return r.CounterBought.Div(r.BaseSold)
 }
 
