@@ -65,7 +65,7 @@ func ResBodyFromJsonf(
 	return ioutil.NopCloser(jsonBuffer)
 }
 
-func GetReqValues(
+func GetReqBodyValues(
 	t *testing.T,
 	req *http.Request,
 ) url.Values {

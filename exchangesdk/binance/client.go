@@ -13,10 +13,8 @@ import (
 	"testing"
 	"strconv"
 	"time"
-	"fmt"
 	"crypto/hmac"
 	"crypto/sha256"
-	"strings"
 	"encoding/hex"
 )
 
@@ -103,30 +101,24 @@ func (c *client) PostLimitOrderForPair(
 	order exchangesdk.Order,
 ) (string, error) {
 
-	path := requestutil.FullPath(baseUrl, "/api/v3/order")
-
-	values := url.Values{}
-	nowMs := utiltime.Now().Round(time.Millisecond).UnixNano() / 1e6
-	timestampStr := strconv.FormatInt(nowMs, 10)
-	values.Add("timestamp", timestampStr)
-
 	side := "BUY"
 	if order.Type == exchangesdk.OrderTypeAsk {
 		side = "SELL"
 	}
 
+	values := url.Values{}
 	values.Add("type", "LIMIT")
 	values.Add("side", side)
 	values.Add("timeInForce", "GTC")
-	values.Add("symbol", string(pair))
 	values.Add("quantity", order.Volume.String())
 	values.Add("price", order.Price.String())
 
-	body, err := postRequestWithHmacAuth(
+	body, err := requestToOrderEndpointWithAuth(
+		"POST",
 		c.httpClient,
 		c.apiKey,
 		c.apiSecret,
-		path,
+		pair,
 		values,
 	)
 	if err != nil {
@@ -134,7 +126,7 @@ func (c *client) PostLimitOrderForPair(
 	}
 
 	res := struct{
-		Id int64 `json:"orderId"`
+		Id string `json:"clientOrderId"`
 	}{}
 
 	err = json.Unmarshal(body, &res)
@@ -142,18 +134,132 @@ func (c *client) PostLimitOrderForPair(
 		return "", err
 	}
 
-	return strconv.FormatInt(res.Id, 10), nil
+	return res.Id, nil
 }
 
-func postRequestWithHmacAuth(
+func (c *client) StopOrder(ctx context.Context, orderId string) error {
+
+	return c.StopOrderForPair(ctx, BTCEUR, orderId)
+}
+
+func (c *client) StopOrderForPair(
+	ctx context.Context,
+	pair marketPair,
+	orderId string,
+) error {
+
+	values := url.Values{}
+	values.Add("origClientOrderId", orderId)
+
+	_, err := requestToOrderEndpointWithAuth(
+		"DELETE",
+		c.httpClient,
+		c.apiKey,
+		c.apiSecret,
+		pair,
+		values,
+	)
+	return err
+}
+
+func (c *client) GetOrderStatus(
+	ctx context.Context,
+	orderId string,
+) (exchangesdk.OrderStatus, error) {
+
+	return c.GetOrderStatusForPair(ctx, BTCEUR, orderId)
+}
+
+func (c *client) GetOrderStatusForPair(
+	ctx context.Context,
+	pair marketPair,
+	orderId string,
+) (exchangesdk.OrderStatus, error) {
+
+	values := url.Values{}
+	values.Add("origClientOrderId", orderId)
+
+	body, err := requestToOrderEndpointWithAuth(
+		"GET",
+		c.httpClient,
+		c.apiKey,
+		c.apiSecret,
+		pair,
+		values,
+	)
+	if err != nil {
+		return exchangesdk.OrderStatus{}, err
+	}
+
+	res := struct{
+		Status string `json:"status"`
+		Side string `json:"side"`
+		FillAmount decimal.Decimal `json:"executedQty"`
+	}{}
+
+	err = json.Unmarshal(body, &res)
+	if err != nil {
+		return exchangesdk.OrderStatus{}, err
+	}
+
+	state := exchangesdk.OrderStatePending
+	if res.Status == "FILLED" {
+		state = exchangesdk.OrderStateComplete
+	}
+
+	orderType := exchangesdk.OrderTypeBid
+	if res.Side == "SELL" {
+		orderType = exchangesdk.OrderTypeAsk
+	}
+
+	return exchangesdk.OrderStatus{
+		State: state,
+		Type: orderType,
+		FillAmountBase: res.FillAmount,
+	}, nil
+}
+
+func (c *client) GetTrades(ctx context.Context, page int64) ([]exchangesdk.Trade, error) {
+
+	panic("not implemented")
+}
+
+func requestToOrderEndpointWithAuth(
+	reqMethod string,
+	httpClient *http.Client,
+	apiKey string,
+	apiSecret string,
+	pair marketPair,
+	values url.Values,
+) ([]byte, error) {
+
+	path := requestutil.FullPath(baseUrl, "/api/v3/order")
+
+	nowMs := utiltime.Now().Round(time.Millisecond).UnixNano() / 1e6
+	timestampStr := strconv.FormatInt(nowMs, 10)
+	values.Add("timestamp", timestampStr)
+	values.Add("symbol", string(pair))
+
+	path.RawQuery = values.Encode()
+
+	return requestWithHmacAuth(
+		reqMethod,
+		httpClient,
+		apiKey,
+		apiSecret,
+		path,
+	)
+}
+
+func requestWithHmacAuth(
+	reqMethod string,
 	c *http.Client,
 	key string,
 	secret string,
 	fullUrl *url.URL,
-	values url.Values,
 ) ([]byte, error) {
 
-	msgToSign := fmt.Sprint(fullUrl.Query().Encode(), values.Encode())
+	msgToSign := fullUrl.RawQuery
 
 	mac := hmac.New(sha256.New, []byte(secret))
 	mac.Write([]byte(msgToSign))
@@ -161,11 +267,11 @@ func postRequestWithHmacAuth(
 		mac.Sum(nil),
 	)
 
-	values.Add("signature", signature)
+	query := fullUrl.Query()
+	query.Add("signature", signature)
+	fullUrl.RawQuery = query.Encode()
 
-	reqBody := strings.NewReader(values.Encode())
-	reqMethod := "POST"
-	req, err := http.NewRequest(reqMethod, fullUrl.String(), reqBody)
+	req, err := http.NewRequest(reqMethod, fullUrl.String(), nil)
 	if err != nil {
 		return nil, err
 	}

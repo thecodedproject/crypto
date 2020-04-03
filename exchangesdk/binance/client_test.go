@@ -95,7 +95,7 @@ func TestSuccessfulPostBuyLimitOrder(t *testing.T) {
 		Price: decimal.New(1234, -1),
 		Volume: decimal.New(5678, -2),
 	}
-	expectedId := "12345"
+	expectedId := "dce12345"
 
 	nowTime := time.Unix(12345, 0)
 	reset := utiltime.SetTimeNowForTesting(t, nowTime)
@@ -105,13 +105,14 @@ func TestSuccessfulPostBuyLimitOrder(t *testing.T) {
 	c := binance.NewClientForTesting(t, "k", "s", func(req *http.Request) *http.Response {
 
 		handlerCalled = true
-		assert.Equal(
+		assert.Contains(
 			t,
-			"https://api.binance.com/api/v3/order",
 			req.URL.String(),
+			"https://api.binance.com/api/v3/order",
 		)
+		assert.Equal(t, "POST", req.Method)
 
-		values := requestutil.GetReqValues(t, req)
+		values := req.URL.Query()
 
 		assert.Equal(
 			t,
@@ -130,7 +131,7 @@ func TestSuccessfulPostBuyLimitOrder(t *testing.T) {
 
 		return &http.Response{
 			StatusCode: 200,
-			Body: requestutil.ResBodyFromJsonf(t, "{\"orderId\": %s}", expectedId),
+			Body: requestutil.ResBodyFromJsonf(t, "{\"clientOrderId\": \"%s\"}", expectedId),
 		}
 	})
 
@@ -149,7 +150,7 @@ func TestSuccessfulPostSellLimitOrder(t *testing.T) {
 		Price: decimal.New(1232, -1),
 		Volume: decimal.New(5671, -2),
 	}
-	expectedId := "12346"
+	expectedId := "abc12346"
 
 	nowTime := time.Unix(12876, 0)
 	reset := utiltime.SetTimeNowForTesting(t, nowTime)
@@ -159,13 +160,14 @@ func TestSuccessfulPostSellLimitOrder(t *testing.T) {
 	c := binance.NewClientForTesting(t, "k", "s", func(req *http.Request) *http.Response {
 
 		handlerCalled = true
-		assert.Equal(
+		assert.Contains(
 			t,
-			"https://api.binance.com/api/v3/order",
 			req.URL.String(),
+			"https://api.binance.com/api/v3/order",
 		)
+		assert.Equal(t, "POST", req.Method)
 
-		values := requestutil.GetReqValues(t, req)
+		values := req.URL.Query()
 
 		assert.Equal(
 			t,
@@ -184,7 +186,7 @@ func TestSuccessfulPostSellLimitOrder(t *testing.T) {
 
 		return &http.Response{
 			StatusCode: 200,
-			Body: requestutil.ResBodyFromJsonf(t, "{\"orderId\": %s}", expectedId),
+			Body: requestutil.ResBodyFromJsonf(t, "{\"clientOrderId\": \"%s\"}", expectedId),
 		}
 	})
 
@@ -214,13 +216,14 @@ func TestSuccessfulPostSellLimitOrderWhichReturns4XX(t *testing.T) {
 	c := binance.NewClientForTesting(t, "k", "s", func(req *http.Request) *http.Response {
 
 		handlerCalled = true
-		assert.Equal(
+		assert.Contains(
 			t,
-			"https://api.binance.com/api/v3/order",
 			req.URL.String(),
+			"https://api.binance.com/api/v3/order",
 		)
+		assert.Equal(t, "POST", req.Method)
 
-		values := requestutil.GetReqValues(t, req)
+		values := req.URL.Query()
 
 		assert.Equal(
 			t,
@@ -250,4 +253,217 @@ func TestSuccessfulPostSellLimitOrderWhichReturns4XX(t *testing.T) {
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), errorMsg)
 	assert.True(t, handlerCalled)
+}
+
+func TestSuccessfulStopLimitOrder(t *testing.T) {
+
+	pair := binance.BTCEUR
+	orderId := "12346"
+
+	nowTime := time.Unix(13876, 0)
+	reset := utiltime.SetTimeNowForTesting(t, nowTime)
+	defer reset()
+
+	handlerCalled := false
+	c := binance.NewClientForTesting(t, "k", "s", func(req *http.Request) *http.Response {
+
+		handlerCalled = true
+		assert.Contains(
+			t,
+			req.URL.String(),
+			"https://api.binance.com/api/v3/order",
+		)
+		assert.Equal(t, "DELETE", req.Method)
+
+		values := req.URL.Query()
+
+		assert.Equal(
+			t,
+			"2e59d9fe933e4a7426488fff23ab145c9350d2cb61949ac7eef3cd46c3b164a2",
+			values.Get("signature"),
+		)
+		assert.Equal(t, timeAsMsStr(nowTime),	values.Get("timestamp"))
+		assert.Equal(t, string(pair), values.Get("symbol"))
+		assert.Equal(t, orderId, values.Get("origClientOrderId"))
+
+		assert.Equal(t, "k", req.Header.Get("X-MBX-APIKEY"))
+
+		return &http.Response{
+			StatusCode: 200,
+			Body: requestutil.ResBodyFromJsonf(
+				t,
+				"{\"clientOrderId\": \"%s\", \"status\": \"CANCELED\"}",
+				orderId,
+			),
+		}
+	})
+
+	err := c.StopOrder(context.Background(), orderId)
+	require.NoError(t, err)
+	assert.True(t, handlerCalled)
+}
+
+func TestUnsuccessfulStopLimitOrder(t *testing.T) {
+
+	pair := binance.BTCEUR
+	orderId := "12346"
+
+	nowTime := time.Unix(13876, 0)
+	reset := utiltime.SetTimeNowForTesting(t, nowTime)
+	defer reset()
+
+	errorMsg := "some error message"
+	handlerCalled := false
+	c := binance.NewClientForTesting(t, "k", "s", func(req *http.Request) *http.Response {
+
+		handlerCalled = true
+		assert.Contains(
+			t,
+			req.URL.String(),
+			"https://api.binance.com/api/v3/order",
+		)
+		assert.Equal(t, "DELETE", req.Method)
+
+		values := req.URL.Query()
+
+		assert.Equal(
+			t,
+			"2e59d9fe933e4a7426488fff23ab145c9350d2cb61949ac7eef3cd46c3b164a2",
+			values.Get("signature"),
+		)
+		assert.Equal(t, timeAsMsStr(nowTime),	values.Get("timestamp"))
+		assert.Equal(t, string(pair), values.Get("symbol"))
+		assert.Equal(t, orderId, values.Get("origClientOrderId"))
+
+		assert.Equal(t, "k", req.Header.Get("X-MBX-APIKEY"))
+
+		return &http.Response{
+			StatusCode: 400,
+			Body: requestutil.ResBodyFromJsonf(
+				t,
+				"{\"code\": -1235, \"msg\": \"%s\"}",
+				errorMsg,
+			),
+		}
+	})
+
+	err := c.StopOrder(context.Background(), orderId)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), errorMsg)
+	assert.True(t, handlerCalled)
+}
+
+func TestSuccessfulGetOrderStatus(t *testing.T) {
+
+	testCases := []struct{
+		name string
+		resBody string
+		expectedStatus exchangesdk.OrderStatus
+	}{
+		{
+			name: "Bid order, pending, no fill",
+			resBody: "{\"executedQty\": \"0.0\", \"status\": \"NEW\", \"side\": \"BUY\"}",
+			expectedStatus: exchangesdk.OrderStatus{
+				State: exchangesdk.OrderStatePending,
+				Type: exchangesdk.OrderTypeBid,
+				FillAmountBase: decimal.Decimal{},
+			},
+		},
+		{
+			name: "Bid order, pending, partial fill",
+			resBody: "{\"executedQty\": \"1.23\", \"status\": \"PARTIALLY_FILLED\", \"side\": \"BUY\"}",
+			expectedStatus: exchangesdk.OrderStatus{
+				State: exchangesdk.OrderStatePending,
+				Type: exchangesdk.OrderTypeBid,
+				FillAmountBase: decimal.New(123, -2),
+			},
+		},
+		{
+			name: "Bid order, completed, filled",
+			resBody: "{\"executedQty\": \"2.23\", \"status\": \"FILLED\", \"side\": \"BUY\"}",
+			expectedStatus: exchangesdk.OrderStatus{
+				State: exchangesdk.OrderStateComplete,
+				Type: exchangesdk.OrderTypeBid,
+				FillAmountBase: decimal.New(223, -2),
+			},
+		},
+		{
+			name: "Ask order, pending, no fill",
+			resBody: "{\"executedQty\": \"0.0\", \"status\": \"NEW\", \"side\": \"SELL\"}",
+			expectedStatus: exchangesdk.OrderStatus{
+				State: exchangesdk.OrderStatePending,
+				Type: exchangesdk.OrderTypeAsk,
+				FillAmountBase: decimal.Decimal{},
+			},
+		},
+		{
+			name: "Ask order, pending, partial fill",
+			resBody: "{\"executedQty\": \"1.23\", \"status\": \"PARTIALLY_FILLED\", \"side\": \"SELL\"}",
+			expectedStatus: exchangesdk.OrderStatus{
+				State: exchangesdk.OrderStatePending,
+				Type: exchangesdk.OrderTypeAsk,
+				FillAmountBase: decimal.New(123, -2),
+			},
+		},
+		{
+			name: "Ask order, completed, filled",
+			resBody: "{\"executedQty\": \"2.23\", \"status\": \"FILLED\", \"side\": \"SELL\"}",
+			expectedStatus: exchangesdk.OrderStatus{
+				State: exchangesdk.OrderStateComplete,
+				Type: exchangesdk.OrderTypeAsk,
+				FillAmountBase: decimal.New(223, -2),
+			},
+		},
+	}
+
+	for _, test := range testCases {
+		t.Run(test.name, func(t *testing.T) {
+
+			pair := binance.BTCEUR
+			orderId := "sda12346"
+
+			nowTime := time.Unix(13876, 0)
+			reset := utiltime.SetTimeNowForTesting(t, nowTime)
+			defer reset()
+
+			handlerCalled := false
+			c := binance.NewClientForTesting(t, "k", "s", func(req *http.Request) *http.Response {
+
+				handlerCalled = true
+				assert.Contains(
+					t,
+					req.URL.String(),
+					"https://api.binance.com/api/v3/order",
+				)
+				assert.Equal(t, "GET", req.Method)
+
+				values := req.URL.Query()
+
+				assert.Equal(
+					t,
+					"981ba3a377fd892908878bfcd98b889743037e7e8c8468bded3389a6ca062b9b",
+					values.Get("signature"),
+				)
+				assert.Equal(t, timeAsMsStr(nowTime),	values.Get("timestamp"))
+				assert.Equal(t, string(pair), values.Get("symbol"))
+				assert.Equal(t, orderId, values.Get("origClientOrderId"))
+
+				assert.Equal(t, "k", req.Header.Get("X-MBX-APIKEY"))
+
+				return &http.Response{
+					StatusCode: 200,
+					Body: requestutil.ResBodyFromJsonf(
+						t,
+						test.resBody,
+					),
+				}
+			})
+
+			actualStatus, err := c.GetOrderStatus(context.Background(), orderId)
+			require.NoError(t, err)
+			assert.True(t, handlerCalled)
+
+			util.LogicallyEqual(t, test.expectedStatus, actualStatus)
+		})
+	}
 }
