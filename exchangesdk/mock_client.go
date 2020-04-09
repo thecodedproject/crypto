@@ -41,3 +41,8 @@ func (m *MockClient) StopOrder(ctx context.Context, orderId string) error {
 	return args.Error(0)
 }
 
+func (m *MockClient) MakerFee() decimal.Decimal {
+
+	args := m.Called()
+	return args.Get(0).(decimal.Decimal)
+}

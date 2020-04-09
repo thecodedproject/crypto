@@ -140,6 +140,11 @@ func (l *client) StopOrder(ctx context.Context, orderId string) error {
   return nil
 }
 
+func (l *client) MakerFee() decimal.Decimal {
+
+	return decimal.Decimal{}
+}
+
 func (l *client) GetOrderStatus(ctx context.Context, orderId string) (exchangesdk.OrderStatus, error) {
 
   req := luno_sdk.GetOrderRequest{

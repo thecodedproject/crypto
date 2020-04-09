@@ -224,6 +224,11 @@ func (c *client) GetTrades(ctx context.Context, page int64) ([]exchangesdk.Trade
 	panic("not implemented")
 }
 
+func (c *client) MakerFee() decimal.Decimal {
+
+	return decimal.New(75, -5)
+}
+
 func requestToOrderEndpointWithAuth(
 	reqMethod string,
 	httpClient *http.Client,
