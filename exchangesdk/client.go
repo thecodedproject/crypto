@@ -57,4 +57,7 @@ type Client interface {
 
 	// MakerFee returns the fee as a ratio (i.e. 1% returned as 0.01)
 	MakerFee() decimal.Decimal
+
+	CounterPrecision() int32
+	BasePrecision() int32
 }

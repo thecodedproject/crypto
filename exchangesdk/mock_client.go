@@ -46,3 +46,15 @@ func (m *MockClient) MakerFee() decimal.Decimal {
 	args := m.Called()
 	return args.Get(0).(decimal.Decimal)
 }
+
+func (m *MockClient) CounterPrecision() int32 {
+
+	args := m.Called()
+	return args.Get(0).(int32)
+}
+
+func (m *MockClient) BasePrecision() int32 {
+
+	args := m.Called()
+	return args.Get(0).(int32)
+}

@@ -145,6 +145,16 @@ func (l *client) MakerFee() decimal.Decimal {
 	return decimal.Decimal{}
 }
 
+func (l *client) CounterPrecision() int32 {
+
+	return 2
+}
+
+func (l *client) BasePrecision() int32 {
+
+	return 4
+}
+
 func (l *client) GetOrderStatus(ctx context.Context, orderId string) (exchangesdk.OrderStatus, error) {
 
   req := luno_sdk.GetOrderRequest{

@@ -229,6 +229,16 @@ func (c *client) MakerFee() decimal.Decimal {
 	return decimal.New(75, -5)
 }
 
+func (l *client) CounterPrecision() int32 {
+
+	return 2
+}
+
+func (l *client) BasePrecision() int32 {
+
+	return 6
+}
+
 func requestToOrderEndpointWithAuth(
 	reqMethod string,
 	httpClient *http.Client,
