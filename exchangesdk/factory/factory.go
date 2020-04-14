@@ -20,11 +20,18 @@ func NewClient(
 		return luno.NewClient(
 			ctx,
 			apiKey,
-			apiSecret)
+			apiSecret,
+		)
 	case "binance":
 		return binance.NewClient(
 			apiKey,
-			apiSecret)
+			apiSecret,
+		)
+	case "dummyclient":
+		return dummyclient.NewClient(
+				apiKey,
+				apiSecret,
+			)
 	default:
 		return nil, fmt.Errorf("Cannot create client; Unknown exchange %s", exchangeName)
 	}
