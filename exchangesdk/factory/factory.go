@@ -4,8 +4,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/thecodedproject/crypto/exchangesdk"
-	"github.com/thecodedproject/crypto/exchangesdk/luno"
 	"github.com/thecodedproject/crypto/exchangesdk/binance"
+	"github.com/thecodedproject/crypto/exchangesdk/dummyclient"
+	"github.com/thecodedproject/crypto/exchangesdk/luno"
 )
 
 func NewClient(

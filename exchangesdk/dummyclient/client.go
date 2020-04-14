@@ -2,20 +2,8 @@ package dummyclient
 
 import (
 	"context"
-	"encoding/json"
 	"github.com/shopspring/decimal"
 	"github.com/thecodedproject/crypto/exchangesdk"
-	"github.com/thecodedproject/crypto/exchangesdk/requestutil"
-	utiltime "github.com/thecodedproject/crypto/util/time"
-	"io/ioutil"
-	"net/http"
-	"net/url"
-	"testing"
-	"strconv"
-	"time"
-	"crypto/hmac"
-	"crypto/sha256"
-	"encoding/hex"
 )
 
 type marketPair string
@@ -33,7 +21,7 @@ type client struct {
 
 func NewClient(apiKey, apiSecret string) (*client, error) {
 
-	return &client{} nil
+	return &client{}, nil
 }
 
 func (c *client) LatestPrice(ctx context.Context) (decimal.Decimal, error) {
