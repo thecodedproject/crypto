@@ -11,6 +11,10 @@ import (
 // TODO Add support for comparing pointers and arrays
 func LogicallyEqual(t *testing.T, a, b interface{}, s ...interface{}) bool {
 
+	if a == nil || b == nil {
+		return assert.Equal(t, a, b, s...)
+	}
+
 	aType := reflect.TypeOf(a)
 	bType := reflect.TypeOf(b)
 

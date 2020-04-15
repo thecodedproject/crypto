@@ -1,6 +1,7 @@
 package util_test
 
 import (
+	"errors"
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
 	"github.com/thecodedproject/crypto/util"
@@ -32,6 +33,28 @@ func TestLogicallyEqual(t *testing.T) {
 			name: "shopspring decimals not equal",
 			a: decimal.NewFromFloat(2.0),
 			b: decimal.NewFromFloat(30).Div(decimal.NewFromFloat(10)),
+			pass: false,
+		},
+		{
+			name: "nil errors inside structs equal",
+			a: struct{
+				Err error
+			}{},
+			b: struct{
+				Err error
+			}{},
+			pass: true,
+		},
+		{
+			name: "nil errors inside structs not equal - one not initalised",
+			a: struct{
+				Err error
+			}{},
+			b: struct{
+				Err error
+			}{
+				Err: errors.New("some error"),
+			},
 			pass: false,
 		},
 		{
