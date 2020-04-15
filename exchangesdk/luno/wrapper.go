@@ -166,10 +166,15 @@ func (l *client) GetOrderStatus(ctx context.Context, orderId string) (exchangesd
     return exchangesdk.OrderStatus{}, err
   }
 
+	fillAmountBase, err := lunoToShopSpringDecimal(res.Base)
+	if err != nil {
+    return exchangesdk.OrderStatus{}, err
+	}
+
   return exchangesdk.OrderStatus{
     State: exchangesdk.OrderState(res.State),
     Type: exchangesdk.OrderType(res.Type),
-		FillAmountBase: lunoToShopSpringDecimal(res.Base),
+		FillAmountBase: fillAmountBase,
   }, nil
 }
 
