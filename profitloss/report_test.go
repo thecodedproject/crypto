@@ -216,6 +216,16 @@ func TestAveragePriceReport_BaseBalance(t *testing.T) {
 			},
 			BaseBalance: D(-1.1),
 		},
+		{
+			Name: "When inital base balance is not zero",
+			Report: profitloss.Report{
+				InitalBaseBalance: D(30.5),
+				BaseBought: D(22.5),
+				BaseSold: D(16.0),
+				BaseFees: D(7.6),
+			},
+			BaseBalance: D(29.4),
+		},
 	}
 
 	for _, test := range testCases {
@@ -248,6 +258,16 @@ func TestAveragePriceReport_CounterBalance(t *testing.T) {
 				CounterFees: D(7.6),
 			},
 			CounterBalance: D(-1.1),
+		},
+		{
+			Name: "When inital counter balance is not zero",
+			Report: profitloss.Report{
+				InitalCounterBalance: D(12.5),
+				CounterBought: D(22.5),
+				CounterSold: D(16.0),
+				CounterFees: D(7.6),
+			},
+			CounterBalance: D(11.4),
 		},
 	}
 
