@@ -86,14 +86,8 @@ func mapsLogicallyEqual(
 	aValue := reflect.ValueOf(a)
 	bValue := reflect.ValueOf(b)
 
-	lengthMsg := append([]interface{}{"Length of map"}, s...)
-	ok := assert.Equal(t, aValue.Len(), bValue.Len(), lengthMsg...)
-	if !ok {
-		return false
-	}
-
 	keysMsg := append([]interface{}{"Keys of map"}, s...)
-	ok = assert.Equal(
+	ok := assert.Equal(
 		t,
 		sortedMapKeys(aValue),
 		sortedMapKeys(bValue),
