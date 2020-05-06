@@ -2,6 +2,7 @@ package dummyclient
 
 import (
 	"context"
+	"math/rand"
 	"github.com/shopspring/decimal"
 	"github.com/thecodedproject/crypto/exchangesdk"
 )
@@ -17,6 +18,7 @@ const (
 )
 
 type client struct {
+	lastOrderVolume decimal.Decimal
 }
 
 func NewClient(apiKey, apiSecret string) (*client, error) {
@@ -31,6 +33,7 @@ func (c *client) LatestPrice(ctx context.Context) (decimal.Decimal, error) {
 
 func (c *client) PostLimitOrder(ctx context.Context, order exchangesdk.Order) (string, error) {
 
+	c.lastOrderVolume = order.Volume
 	return "some_order_id", nil
 }
 
@@ -44,9 +47,16 @@ func (c *client) GetOrderStatus(
 	orderId string,
 ) (exchangesdk.OrderStatus, error) {
 
-	return exchangesdk.OrderStatus{
-		State: exchangesdk.OrderStatePending,
-	}, nil
+	if rand.Float64() < 0.5 {
+		return exchangesdk.OrderStatus{
+			State: exchangesdk.OrderStatePending,
+		}, nil
+	} else {
+		return exchangesdk.OrderStatus{
+			State: exchangesdk.OrderStateComplete,
+			FillAmountBase: c.lastOrderVolume,
+		}, nil
+	}
 }
 
 func (c *client) GetTrades(ctx context.Context, page int64) ([]exchangesdk.Trade, error) {
