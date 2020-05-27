@@ -61,9 +61,3 @@ type Client interface {
 	CounterPrecision() int32
 	BasePrecision() int32
 }
-
-type OrderBookFollower interface {
-
-	MidpointPrice() decimal.Decimal
-
-}
