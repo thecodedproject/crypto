@@ -1,7 +1,6 @@
 package factory
 
 import (
-	"context"
 	"fmt"
 	"github.com/thecodedproject/crypto/exchangesdk"
 	"github.com/thecodedproject/crypto/exchangesdk/binance"
