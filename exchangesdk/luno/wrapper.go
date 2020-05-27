@@ -7,7 +7,6 @@ import (
 	"github.com/shopspring/decimal"
 	"github.com/thecodedproject/crypto/exchangesdk"
 	"github.com/thecodedproject/crypto/util"
-	"strconv"
 	"testing"
 	"time"
 	luno_sdk "github.com/luno/luno-go"
@@ -16,8 +15,6 @@ import (
 
 const (
   TRADINGPAIR = "XBTEUR"
-  BASE = "XBT"
-  COUNTER = "EUR"
 )
 
 type LunoSdk interface {
@@ -35,43 +32,23 @@ type tradesAndLastSeq struct {
 
 type client struct {
   lunoSdk LunoSdk
-  baseAccountId int64
-  counterAccountId int64
 	tradesByPage map[int64]tradesAndLastSeq
 }
 
-func NewClient(ctx context.Context, id, secret string) (*client, error) {
+func NewClient(id, secret string) (*client, error) {
   c := luno_sdk.NewClient()
   c.SetAuth(id, secret)
 
-  accountIds, err := getAccountIds(ctx, c)
-  if err != nil {
-    return nil, err
-  }
-
-  baseAccountId, ok := accountIds[BASE]
-  if !ok {
-    return nil, errors.New("No base accountId found")
-  }
-  counterAccountId, ok := accountIds[COUNTER]
-  if !ok {
-    return nil, errors.New("No counter accountId found")
-  }
-
   return &client{
     lunoSdk: c,
-    baseAccountId: baseAccountId,
-    counterAccountId: counterAccountId,
 		tradesByPage: make(map[int64]tradesAndLastSeq),
   }, nil
 }
 
-func NewClientForTesting(_ *testing.T, lunoSdk LunoSdk, baseAccountId, counterAccountId int64) *client {
+func NewClientForTesting(_ *testing.T, lunoSdk LunoSdk) *client {
 
 	return &client{
 		lunoSdk: lunoSdk,
-		baseAccountId: baseAccountId,
-		counterAccountId: counterAccountId,
 		tradesByPage: make(map[int64]tradesAndLastSeq),
 	}
 }
@@ -108,8 +85,6 @@ func (l *client) PostLimitOrder(ctx context.Context, order exchangesdk.Order) (s
     Price: lunoPrice,
     Volume: lunoVolume,
     Type: luno_sdk.OrderType(order.Type),
-    BaseAccountId: l.baseAccountId,
-    CounterAccountId: l.counterAccountId,
     PostOnly: true,
   }
 
@@ -263,25 +238,6 @@ func convertLunoTrades(lunoTrades []luno_sdk.Trade) ([]exchangesdk.Trade, error)
 	}
 
 	return trades, nil
-}
-
-func getAccountIds(ctx context.Context, c *luno_sdk.Client) (map[string]int64, error) {
-
-  res, err := c.GetBalances(ctx, &luno_sdk.GetBalancesRequest{})
-  if err != nil {
-    return nil, err
-  }
-
-  ids := make(map[string]int64)
-  for _, account := range res.Balance {
-    id, err := strconv.ParseInt(account.AccountId, 10, 64)
-    if err != nil {
-      return nil, err
-    }
-    ids[account.Asset] = id
-  }
-
-  return ids, nil
 }
 
 // TODO add tests for this function around edge cases

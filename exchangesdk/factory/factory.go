@@ -10,7 +10,6 @@ import (
 )
 
 func NewClient(
-	ctx context.Context,
 	exchangeName string,
 	apiKey string,
 	apiSecret string,
@@ -19,7 +18,6 @@ func NewClient(
 	switch exchangeName {
 	case "luno":
 		return luno.NewClient(
-			ctx,
 			apiKey,
 			apiSecret,
 		)

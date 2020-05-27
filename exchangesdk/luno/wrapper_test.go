@@ -39,7 +39,7 @@ func TestGetTradesForPageLessThanOneReqturnsError(t *testing.T) {
 
 	m := new(luno.MockLunoSdk)
 	ctx := context.Background()
-	c := luno.NewClientForTesting(t, m, 12, 34)
+	c := luno.NewClientForTesting(t, m)
 	_, err := c.GetTrades(ctx, 0)
 	assert.Error(t, err)
 }
@@ -55,7 +55,7 @@ func TestGetTradesWhenThereAreNoTrades(t *testing.T) {
 	m.On("ListUserTrades", mock.Anything, req).Return(&res, nil)
 
 	ctx := context.Background()
-	c := luno.NewClientForTesting(t, m, 12, 34)
+	c := luno.NewClientForTesting(t, m)
 	trades, err := c.GetTrades(ctx, 1)
 	require.NoError(t, err)
 
@@ -93,7 +93,7 @@ func TestGetTradesFirstPageWhenThereAreSomeTrades(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	c := luno.NewClientForTesting(t, m, 12, 34)
+	c := luno.NewClientForTesting(t, m)
 	trades, err := c.GetTrades(ctx, 1)
 	require.NoError(t, err)
 
@@ -115,7 +115,7 @@ func TestGetTradesFirstPageMultipleTimesWhenFullOfTradesMultipleTimesOnlyCallsLi
 	expected := makeSomeTrades(100)
 
 	ctx := context.Background()
-	c := luno.NewClientForTesting(t, m, 12, 34)
+	c := luno.NewClientForTesting(t, m)
 	trades, err := c.GetTrades(ctx, 1)
 	require.NoError(t, err)
 	assert.Equal(t, expected, trades)
@@ -158,7 +158,7 @@ func TestGetTradesSecondPageWhenFirstPageIsFull(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	c := luno.NewClientForTesting(t, m, 12, 34)
+	c := luno.NewClientForTesting(t, m)
 	trades, err := c.GetTrades(ctx, 2)
 	require.NoError(t, err)
 
@@ -198,7 +198,7 @@ func TestRepeatedlyGetTradesForSecondPageWhenFirstPageIsFullRequestsFirstPageOnc
 	}
 
 	ctx := context.Background()
-	c := luno.NewClientForTesting(t, m, 12, 34)
+	c := luno.NewClientForTesting(t, m)
 
 	trades, err := c.GetTrades(ctx, 2)
 	require.NoError(t, err)
@@ -255,7 +255,7 @@ func TestRepeatedlyGetTradesForThridPageWhenSecondANdFirstPageIsFullRequestsThos
 	}
 
 	ctx := context.Background()
-	c := luno.NewClientForTesting(t, m, 12, 34)
+	c := luno.NewClientForTesting(t, m)
 
 	trades, err := c.GetTrades(ctx, 3)
 	require.NoError(t, err)
@@ -297,7 +297,7 @@ func TestGetTradesThirdPageWhenSecondPageIsNotFullReturnsEmpty(t *testing.T) {
 	m.On("ListUserTrades", mock.Anything, &secondReq).Return(&secondRes, nil).Once()
 
 	ctx := context.Background()
-	c := luno.NewClientForTesting(t, m, 12, 34)
+	c := luno.NewClientForTesting(t, m)
 	trades, err := c.GetTrades(ctx, 3)
 	require.NoError(t, err)
 
@@ -327,7 +327,7 @@ func TestGetTradesForHundredthPageWhenOnlyFirstPageHasTradesOnlyRequestsFirstPag
 	m.On("ListUserTrades", mock.Anything, req).Return(&res, nil).Once()
 
 	ctx := context.Background()
-	c := luno.NewClientForTesting(t, m, 12, 34)
+	c := luno.NewClientForTesting(t, m)
 	trades, err := c.GetTrades(ctx, 100)
 	require.NoError(t, err)
 

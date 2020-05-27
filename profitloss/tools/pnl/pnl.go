@@ -55,7 +55,6 @@ func main() {
 
 	ctx := context.Background()
 	c, err := luno.NewClient(
-		ctx,
 		auth.ApiKey,
 		auth.ApiSecret)
 	if err != nil {

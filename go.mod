@@ -3,6 +3,7 @@ module github.com/thecodedproject/crypto
 go 1.13
 
 require (
+	github.com/gorilla/websocket v1.4.2
 	github.com/luno/luno-go v0.0.14
 	github.com/shopspring/decimal v0.0.0-20200227202807-02e2044944cc
 	github.com/stretchr/testify v1.5.1
