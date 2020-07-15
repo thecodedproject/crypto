@@ -11,32 +11,30 @@ import (
 
 var logPeriod = 1*time.Minute
 
-type AvVals struct {
-	Sum decimal.Decimal
-	Min decimal.Decimal
-	Max decimal.Decimal
-}
-
 type Stats struct {
 
-	ObCount int64
+	BestBid util.MovingStats
+	BestAsk util.MovingStats
 
-	VolumeBuyPrice AvVals
-	VolumeSellPrice AvVals
-
-	BestBid AvVals
-	BestAsk AvVals
+	VolumeBuyPrice util.MovingStats
+	VolumeSellPrice util.MovingStats
 
 	BuySellWeight util.MovingStats
 }
 
 func updateStatsWithOrderBook(stats *Stats, ob *binance.OrderBook) {
 
-	stats.ObCount += 1
-	updateAvVals(&stats.VolumeBuyPrice, ob.VolumeBuyPrice)
-	updateAvVals(&stats.VolumeSellPrice, ob.VolumeSellPrice)
-	updateAvVals(&stats.BestBid, ob.Bids[0].Price)
-	updateAvVals(&stats.BestAsk, ob.Asks[0].Price)
+	bestBid, _ := ob.Bids[0].Price.Float64()
+	bestAsk, _ := ob.Asks[0].Price.Float64()
+
+	stats.BestBid.Add(ob.Timestamp, bestBid)
+	stats.BestAsk.Add(ob.Timestamp, bestAsk)
+
+	buyPrice, _ := ob.VolumeBuyPrice.Float64()
+	sellPrice, _ := ob.VolumeSellPrice.Float64()
+
+	stats.VolumeBuyPrice.Add(ob.Timestamp, buyPrice)
+	stats.VolumeSellPrice.Add(ob.Timestamp, sellPrice)
 }
 
 func updateStatesWithTrade(stats *Stats, trade *binance.Trade) {
@@ -53,19 +51,6 @@ func updateStatesWithTrade(stats *Stats, trade *binance.Trade) {
 	stats.BuySellWeight.Add(trade.Timestamp, weight)
 }
 
-func updateAvVals(av *AvVals, val decimal.Decimal) {
-
-	av.Sum = av.Sum.Add(val)
-
-	if val.GreaterThan(av.Max) {
-		av.Max = val
-	}
-
-	if av.Min.IsZero() || val.LessThan(av.Min) {
-		av.Min = val
-	}
-}
-
 func minutesAgo(i int) time.Time{
 
 	return time.Now().Add(time.Duration(-i)*time.Minute)
@@ -73,11 +58,9 @@ func minutesAgo(i int) time.Time{
 
 func logStats(stats *Stats) {
 
-	if stats.BuySellWeight == nil {
-		log.Fatal("logStats nil")
-	}
+	minAgo := minutesAgo(1)
 
-	bsWeight1min, err := stats.BuySellWeight.Sum(minutesAgo(1))
+	bsWeight1min, err := stats.BuySellWeight.Sum(minAgo)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -87,15 +70,48 @@ func logStats(stats *Stats) {
 		log.Fatal(err)
 	}
 
-	log.Printf("%s (%s)\t\t%s (%s)\t\t%s (%s)\t\t%s (%s)\t\t%.3f\t\t%.3f\n",
-		average(stats.VolumeSellPrice.Sum, stats.ObCount),
-		stats.VolumeSellPrice.Max.Sub(stats.VolumeSellPrice.Min),
-		average(stats.BestBid.Sum, stats.ObCount),
-		stats.BestBid.Max.Sub(stats.BestBid.Min),
-		average(stats.BestAsk.Sum, stats.ObCount),
-		stats.BestAsk.Max.Sub(stats.BestAsk.Min),
-		average(stats.VolumeBuyPrice.Sum, stats.ObCount),
-		stats.VolumeBuyPrice.Max.Sub(stats.VolumeBuyPrice.Min),
+	bestBid, err := stats.BestBid.Mean(minAgo)
+	if err != nil {
+		log.Fatal(err)
+	}
+	bestBidVar, err := stats.BestBid.Variation(minAgo)
+	if err != nil {
+		log.Fatal(err)
+	}
+	bestAsk, err := stats.BestAsk.Mean(minAgo)
+	if err != nil {
+		log.Fatal(err)
+	}
+	bestAskVar, err := stats.BestAsk.Variation(minAgo)
+	if err != nil {
+		log.Fatal(err)
+	}
+	avSellPrice, err := stats.VolumeSellPrice.Mean(minAgo)
+	if err != nil {
+		log.Fatal(err)
+	}
+	avSellVariation, err := stats.VolumeSellPrice.Variation(minAgo)
+	if err != nil {
+		log.Fatal(err)
+	}
+	avBuyPrice, err := stats.VolumeBuyPrice.Mean(minAgo)
+	if err != nil {
+		log.Fatal(err)
+	}
+	avBuyVariation, err := stats.VolumeBuyPrice.Variation(minAgo)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Printf("%.3f (%.3f)\t\t%.3f (%.3f)\t\t%.3f (%.3f)\t\t%.3f (%.3f)\t\t%.3f\t\t%.3f\n",
+		avSellPrice,
+		avSellVariation,
+		bestBid,
+		bestBidVar,
+		bestAsk,
+		bestAskVar,
+		avBuyPrice,
+		avBuyVariation,
 		bsWeight1min,
 		bsWeight5min,
 	)
@@ -128,6 +144,10 @@ func logStatsForever() {
 
 	var stats Stats
 	stats.BuySellWeight = util.NewMovingStats(6*time.Minute)
+	stats.VolumeBuyPrice = util.NewMovingStats(6*time.Minute)
+	stats.VolumeSellPrice = util.NewMovingStats(6*time.Minute)
+	stats.BestBid = util.NewMovingStats(6*time.Minute)
+	stats.BestAsk = util.NewMovingStats(6*time.Minute)
 
 	for {
 		select {
@@ -147,11 +167,6 @@ func logStatsForever() {
 				}
 			case <-time.After(nextLogPeriod()):
 				logStats(&stats)
-				stats.ObCount = 0
-				stats.VolumeBuyPrice = AvVals{}
-				stats.VolumeSellPrice = AvVals{}
-				stats.BestBid = AvVals{}
-				stats.BestAsk = AvVals{}
 		}
 	}
 }
