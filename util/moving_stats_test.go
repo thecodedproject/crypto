@@ -13,7 +13,7 @@ func secondsAgo(i int) time.Time {
 	return time.Now().Add(time.Duration(-i)*time.Second)
 }
 
-func TestFloa64MovingAverageSince(t *testing.T) {
+func TestMovingStatsMean(t *testing.T) {
 
 	type TimeValue struct {
 		Time time.Time
@@ -78,13 +78,13 @@ func TestFloa64MovingAverageSince(t *testing.T) {
 	for _, test := range testCases {
 		t.Run(test.Name, func(t *testing.T) {
 
-			ma := util.NewFloat64MovingAverage(test.MaxDuration)
+			ma := util.NewMovingStats(test.MaxDuration)
 
 			for _, v := range test.Values {
 				ma.Add(v.Time, v.Value)
 			}
 
-			av, err := ma.Since(test.SinceTime)
+			av, err := ma.Mean(test.SinceTime)
 			if test.ExpectErr {
 				require.Error(t, err)
 				return
@@ -92,6 +92,89 @@ func TestFloa64MovingAverageSince(t *testing.T) {
 
 			require.NoError(t, err)
 			assert.Equal(t, test.ExpectedAverage, av)
+		})
+	}
+}
+
+func TestMovingStatsSince(t *testing.T) {
+
+	type TimeValue struct {
+		Time time.Time
+		Value float64
+	}
+
+	testCases := []struct{
+		Name string
+		Values []TimeValue
+		MaxDuration time.Duration
+		SinceTime time.Time
+		ExpectedSum float64
+		ExpectErr bool
+	}{
+		{
+			Name: "No values returns sum of zero",
+			MaxDuration: time.Minute,
+			SinceTime: secondsAgo(10),
+			ExpectedSum: 0.0,
+		},
+		{
+			Name: "Single value within time since returns value",
+			Values: []TimeValue{
+				{secondsAgo(1), 20.0},
+			},
+			MaxDuration: time.Hour,
+			SinceTime: secondsAgo(10),
+			ExpectedSum: 20.0,
+		},
+		{
+			Name: "Multiple values within time since returns sum of values",
+			Values: []TimeValue{
+				{secondsAgo(1), 20.0},
+				{secondsAgo(2), 30.0},
+				{secondsAgo(3), 40.0},
+				{secondsAgo(4), 50.0},
+			},
+			MaxDuration: time.Hour,
+			SinceTime: secondsAgo(10),
+			ExpectedSum: 140.0,
+		},
+		{
+			Name: "Multiple values returns sum of values since TimeSince",
+			Values: []TimeValue{
+				{secondsAgo(1), 20.0},
+				{secondsAgo(2), 30.0},
+				{secondsAgo(11), 40.0},
+				{secondsAgo(12), 50.0},
+			},
+			MaxDuration: time.Hour,
+			SinceTime: secondsAgo(10),
+			ExpectedSum: 50.0,
+		},
+		{
+			Name: "Request sum since time which is older than max duration returns error",
+			MaxDuration: time.Second,
+			SinceTime: secondsAgo(10),
+			ExpectErr: true,
+		},
+	}
+
+	for _, test := range testCases {
+		t.Run(test.Name, func(t *testing.T) {
+
+			ma := util.NewMovingStats(test.MaxDuration)
+
+			for _, v := range test.Values {
+				ma.Add(v.Time, v.Value)
+			}
+
+			av, err := ma.Sum(test.SinceTime)
+			if test.ExpectErr {
+				require.Error(t, err)
+				return
+			}
+
+			require.NoError(t, err)
+			assert.Equal(t, test.ExpectedSum, av)
 		})
 	}
 }

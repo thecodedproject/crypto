@@ -4,6 +4,7 @@ import (
 	"github.com/shopspring/decimal"
 	"github.com/thecodedproject/crypto/exchangesdk"
 	"github.com/thecodedproject/crypto/exchangesdk/binance"
+	"github.com/thecodedproject/crypto/util"
 	"log"
 	"time"
 )
@@ -25,15 +26,31 @@ type Stats struct {
 
 	BestBid AvVals
 	BestAsk AvVals
+
+	BuySellWeight util.MovingStats
 }
 
-func updateStats(stats *Stats, ob *binance.OrderBook) {
+func updateStatsWithOrderBook(stats *Stats, ob *binance.OrderBook) {
 
 	stats.ObCount += 1
 	updateAvVals(&stats.VolumeBuyPrice, ob.VolumeBuyPrice)
 	updateAvVals(&stats.VolumeSellPrice, ob.VolumeSellPrice)
 	updateAvVals(&stats.BestBid, ob.Bids[0].Price)
 	updateAvVals(&stats.BestAsk, ob.Asks[0].Price)
+}
+
+func updateStatesWithTrade(stats *Stats, trade *binance.Trade) {
+
+	weight, _ := trade.Volume.Float64()
+	if trade.MakerSide == binance.MarketSideBuy {
+		weight = -weight
+	}
+
+	if stats.BuySellWeight == nil {
+		log.Fatal("updateStatesWithTrade nil")
+	}
+
+	stats.BuySellWeight.Add(trade.Timestamp, weight)
 }
 
 func updateAvVals(av *AvVals, val decimal.Decimal) {
@@ -49,9 +66,28 @@ func updateAvVals(av *AvVals, val decimal.Decimal) {
 	}
 }
 
+func minutesAgo(i int) time.Time{
+
+	return time.Now().Add(time.Duration(-i)*time.Minute)
+}
+
 func logStats(stats *Stats) {
 
-	log.Printf("%s (%s)\t\t%s (%s)\t\t%s (%s)\t\t%s (%s)\n",
+	if stats.BuySellWeight == nil {
+		log.Fatal("logStats nil")
+	}
+
+	bsWeight1min, err := stats.BuySellWeight.Sum(minutesAgo(1))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	bsWeight5min, err := stats.BuySellWeight.Sum(minutesAgo(5))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Printf("%s (%s)\t\t%s (%s)\t\t%s (%s)\t\t%s (%s)\t\t%.3f\t\t%.3f\n",
 		average(stats.VolumeSellPrice.Sum, stats.ObCount),
 		stats.VolumeSellPrice.Max.Sub(stats.VolumeSellPrice.Min),
 		average(stats.BestBid.Sum, stats.ObCount),
@@ -60,6 +96,8 @@ func logStats(stats *Stats) {
 		stats.BestAsk.Max.Sub(stats.BestAsk.Min),
 		average(stats.VolumeBuyPrice.Sum, stats.ObCount),
 		stats.VolumeBuyPrice.Max.Sub(stats.VolumeBuyPrice.Min),
+		bsWeight1min,
+		bsWeight5min,
 	)
 }
 
@@ -86,29 +124,34 @@ func logStatsForever() {
 		decimal.NewFromFloat(1.0),
 	)
 
-	log.Printf("VolSell (var.)\t\tBestBid (var.)\t\tBestAsk (var.)\t\tVolBuy (var.)\n")
+	log.Printf("VolSell (var.)\t\tBestBid (var.)\t\tBestAsk (var.)\t\tVolBuy (var.)\t\tBSWeight(1m)\t\tBSWeight(5m)\n")
 
 	var stats Stats
+	stats.BuySellWeight = util.NewMovingStats(6*time.Minute)
 
 	for {
 		select {
 			case ob, more := <-obf:
 				if more {
-					updateStats(&stats, &ob)
+					updateStatsWithOrderBook(&stats, &ob)
 				} else {
 					log.Println("obf closed")
 					return
 				}
 			case trade, more := <-tradeStream:
 				if more {
-					log.Printf("Got trade: %+v\n", trade)
+					updateStatesWithTrade(&stats, &trade)
 				} else {
 					log.Println("trade stream closed")
 					return
 				}
 			case <-time.After(nextLogPeriod()):
 				logStats(&stats)
-				stats = Stats{}
+				stats.ObCount = 0
+				stats.VolumeBuyPrice = AvVals{}
+				stats.VolumeSellPrice = AvVals{}
+				stats.BestBid = AvVals{}
+				stats.BestAsk = AvVals{}
 		}
 	}
 }
