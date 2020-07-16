@@ -1,15 +1,16 @@
 package main
 
 import (
-	"github.com/shopspring/decimal"
 	"github.com/thecodedproject/crypto/exchangesdk"
 	"github.com/thecodedproject/crypto/exchangesdk/binance"
+	market_follower_stats"github.com/thecodedproject/crypto/market_follower/stats"
 	"github.com/thecodedproject/crypto/util"
 	"log"
 	"time"
 )
 
-var logPeriod = 1*time.Minute
+var logPeriod = 10*time.Second
+var volumePrice = 1.0
 
 type Stats struct {
 
@@ -24,22 +25,21 @@ type Stats struct {
 
 func updateStatsWithOrderBook(stats *Stats, ob *binance.OrderBook) {
 
-	bestBid, _ := ob.Bids[0].Price.Float64()
-	bestAsk, _ := ob.Asks[0].Price.Float64()
+	stats.BestBid.Add(ob.Timestamp, ob.Bids[0].Price)
+	stats.BestAsk.Add(ob.Timestamp, ob.Asks[0].Price)
 
-	stats.BestBid.Add(ob.Timestamp, bestBid)
-	stats.BestAsk.Add(ob.Timestamp, bestAsk)
-
-	buyPrice, _ := ob.VolumeBuyPrice.Float64()
-	sellPrice, _ := ob.VolumeSellPrice.Float64()
+	buyPrice, sellPrice, err := market_follower_stats.CalcPricePerVolumeStats(ob, volumePrice)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	stats.VolumeBuyPrice.Add(ob.Timestamp, buyPrice)
 	stats.VolumeSellPrice.Add(ob.Timestamp, sellPrice)
 }
 
-func updateStatesWithTrade(stats *Stats, trade *binance.Trade) {
+func updateStatsWithTrade(stats *Stats, trade *binance.Trade) {
 
-	weight, _ := trade.Volume.Float64()
+	weight := trade.Volume
 	if trade.MakerSide == binance.MarketSideBuy {
 		weight = -weight
 	}
@@ -117,15 +117,6 @@ func logStats(stats *Stats) {
 	)
 }
 
-func average(sum decimal.Decimal, count int64) decimal.Decimal {
-
-	if count == 0 {
-		return decimal.Decimal{}
-	}
-
-	return sum.DivRound(decimal.NewFromInt(count), 2)
-}
-
 func nextLogPeriod() time.Duration {
 
 	oneEpoch := logPeriod
@@ -137,7 +128,6 @@ func logStatsForever() {
 
 	obf, tradeStream := binance.NewOrderBookFollowerAndTradeStream(
 		exchangesdk.BTCEUR,
-		decimal.NewFromFloat(1.0),
 	)
 
 	log.Printf("VolSell (var.)\t\tBestBid (var.)\t\tBestAsk (var.)\t\tVolBuy (var.)\t\tBSWeight(1m)\t\tBSWeight(5m)\n")
@@ -160,7 +150,7 @@ func logStatsForever() {
 				}
 			case trade, more := <-tradeStream:
 				if more {
-					updateStatesWithTrade(&stats, &trade)
+					updateStatsWithTrade(&stats, &trade)
 				} else {
 					log.Println("trade stream closed")
 					return

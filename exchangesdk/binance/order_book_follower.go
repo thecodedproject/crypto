@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/websocket"
-	"github.com/shopspring/decimal"
 	"github.com/thecodedproject/crypto/exchangesdk"
 	"github.com/thecodedproject/crypto/exchangesdk/requestutil"
 	"log"
@@ -12,6 +11,8 @@ import (
 	"net/url"
 	"sort"
 	"time"
+	"math"
+	"strconv"
 )
 
 const (
@@ -20,14 +21,17 @@ const (
 	orderBookStream = "btceur@depth"
 	tradesStream = "btceur@trade"
 	wsBaseUrl = "wss://stream.binance.com:9443/stream"
+
+	// TODO: Set these in a more robust way
+	MARKET_PRICE_PRECISION = 0.01
+	MARKET_VOLUME_PRECISION = 1e-8
 )
 
 func NewOrderBookFollowerAndTradeStream(
 	pair exchangesdk.Pair,
-	volumePrice decimal.Decimal,
 ) (<-chan OrderBook, <-chan Trade) {
 
-	return followForever(volumePrice)
+	return followForever()
 }
 
 type OrderBook struct {
@@ -37,16 +41,13 @@ type OrderBook struct {
 	Bids []Order
 	Asks []Order
 
-	VolumeBuyPrice decimal.Decimal
-	VolumeSellPrice decimal.Decimal
-
 	lastUpdateId int64
-	volumePrice decimal.Decimal
+	volumePrice float64
 }
 
 type Order struct {
-	Price  decimal.Decimal `json:"price,string"`
-	Volume decimal.Decimal `json:"volume,string"`
+	Price  float64 `json:"price,string"`
+	Volume float64 `json:"volume,string"`
 }
 
 type MarketSide int
@@ -72,8 +73,8 @@ func (s MarketSide) String() string {
 
 type Trade struct {
 	MakerSide MarketSide
-	Price decimal.Decimal
-	Volume decimal.Decimal
+	Price float64
+	Volume float64
 	Timestamp time.Time
 }
 
@@ -91,9 +92,7 @@ func wsUrl() string {
 	return fullUrl
 }
 
-func followForever(
-	volumePrice decimal.Decimal,
-) (<-chan OrderBook, <-chan Trade) {
+func followForever() (<-chan OrderBook, <-chan Trade) {
 
 	obf := make(chan OrderBook, 1)
 	tradeStream := make(chan Trade, 1)
@@ -114,8 +113,6 @@ func followForever(
 			close(obf)
 			return
 		}
-
-		ob.volumePrice = volumePrice
 
 		for {
 			_, msg, err := ws.ReadMessage()
@@ -140,13 +137,6 @@ func followForever(
 			switch update.Stream {
 			case orderBookStream:
 				err := handleOrderBookUpdate(&ob, update.Data)
-				if err != nil {
-					log.Println("OrderBookFollower error:", err)
-					close(obf)
-					return
-				}
-
-				err = calcStats(&ob)
 				if err != nil {
 					log.Println("OrderBookFollower error:", err)
 					close(obf)
@@ -269,8 +259,8 @@ func handleOrderBookUpdate(ob *OrderBook, updateMsg []byte) error {
 func decodeTrade(msgData []byte) (Trade, error) {
 
 	tradeJson := struct{
-		Price decimal.Decimal `json:"p"`
-		Volume decimal.Decimal `json:"q"`
+		Price float64 `json:"p,string"`
+		Volume float64 `json:"q,string"`
 		BuyerIsMaker bool `json:"m,bool"`
 		Timestamp int64 `json:"E"`
 		Temp2 string `json:"e"`
@@ -295,6 +285,16 @@ func decodeTrade(msgData []byte) (Trade, error) {
 	}, nil
 }
 
+func pricesEqual(a, b Order) bool {
+
+	return math.Abs(a.Price-b.Price) < (MARKET_PRICE_PRECISION/float64(2))
+}
+
+func hasZeroVolume(o Order) bool {
+
+	return math.Abs(o.Volume) < (MARKET_VOLUME_PRECISION/float64(2))
+}
+
 func UpdateOrders(currentOrders *[]Order, updates [][]string) error {
 
 	for _, update := range updates {
@@ -306,12 +306,12 @@ func UpdateOrders(currentOrders *[]Order, updates [][]string) error {
 
 		foundOrder := false
 		for i := range *currentOrders {
-			if (*currentOrders)[i].Price.Cmp(orderUpdate.Price) == 0 {
+			if pricesEqual((*currentOrders)[i], orderUpdate) {
 				foundOrder = true
 
 				(*currentOrders)[i].Volume = orderUpdate.Volume
 
-				if (*currentOrders)[i].Volume.Sign() == 0 {
+				if hasZeroVolume((*currentOrders)[i]) {
 					(*currentOrders)[i] = (*currentOrders)[len(*currentOrders)-1]
 					*currentOrders = (*currentOrders)[:len(*currentOrders)-1]
 				}
@@ -320,7 +320,7 @@ func UpdateOrders(currentOrders *[]Order, updates [][]string) error {
 			}
 		}
 
-		if !foundOrder && orderUpdate.Volume.Sign() == 1 {
+		if !foundOrder && !hasZeroVolume(orderUpdate) {
 			*currentOrders = append(*currentOrders, orderUpdate)
 		}
 	}
@@ -349,11 +349,12 @@ func convertOrderStrings(rawOrder []string) (Order, error) {
 		return Order{}, fmt.Errorf("Raw order len != 2")
 	}
 
-	price, err := decimal.NewFromString(rawOrder[0])
+	price, err := strconv.ParseFloat(rawOrder[0], 64)
 	if err != nil {
 		return Order{}, err
 	}
-	volume, err := decimal.NewFromString(rawOrder[1])
+
+	volume, err := strconv.ParseFloat(rawOrder[1], 64)
 	if err != nil {
 		return Order{}, err
 	}
@@ -392,13 +393,13 @@ func sortOrders(orders *[]Order, ordering sortOrdering) error {
 	case sortOrderingDecending:
 		sort.Slice(*orders, func(i, j int) bool {
 
-			return (*orders)[i].Price.GreaterThan((*orders)[j].Price)
+			return (*orders)[i].Price > (*orders)[j].Price
 		})
 		return nil
 	case sortOrderingIncrementing:
 		sort.Slice(*orders, func(i, j int) bool {
 
-			return (*orders)[i].Price.LessThan((*orders)[j].Price)
+			return (*orders)[i].Price < (*orders)[j].Price
 		})
 		return nil
 	default:

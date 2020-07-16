@@ -16,30 +16,24 @@ func TestUpdateOrders(t *testing.T) {
 
 	currentOrders := []binance.Order{
 		{
-			Price: D(1.0),
-			Volume: D(1.1),
+			Price: 1.0,
+			Volume: 1.1,
 		},
 		{
-			Price: D(2.0),
-			Volume: D(3.1),
+			Price: 2.0,
+			Volume: 3.1,
 		},
 	}
 
 	updates := [][]string{
-		{
-			"1.0",
-			"0",
-		},
-		{
-			"2.0",
-			"2.1",
-		},
+		{"1.0", "0"},
+		{"2.0", "2.1"},
 	}
 
 	expectedOrders := []binance.Order{
 		{
-			Price: D(2.0),
-			Volume: D(2.1),
+			Price: 2.0,
+			Volume: 2.1,
 		},
 	}
 
