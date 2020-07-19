@@ -25,6 +25,8 @@ const (
 	// TODO: Set these in a more robust way
 	MARKET_PRICE_PRECISION = 0.01
 	MARKET_VOLUME_PRECISION = 1e-8
+
+	WEBSOCKET_LIFETIME = 55*time.Minute
 )
 
 func NewOrderBookFollowerAndTradeStream(
@@ -96,16 +98,10 @@ func followForever() (<-chan OrderBook, <-chan Trade) {
 
 	obf := make(chan OrderBook, 1)
 	tradeStream := make(chan Trade, 1)
+	var ws *websocket.Conn
+	wsAge := time.Time{}
 
 	go func() {
-
-		ws, _, err := websocket.DefaultDialer.Dial(wsUrl(), nil)
-		if err != nil {
-			log.Println("OrderBookFollower error:", err)
-			close(obf)
-			return
-		}
-		defer ws.Close()
 
 		ob, err := getLatestSnapshot()
 		if err != nil {
@@ -115,6 +111,20 @@ func followForever() (<-chan OrderBook, <-chan Trade) {
 		}
 
 		for {
+			if wsAge.Before(time.Now().Add(-WEBSOCKET_LIFETIME)) {
+				log.Println("New ws!!")
+				if ws != nil {
+					ws.Close()
+				}
+				ws, wsAge, err = newWebsocket()
+				if err != nil {
+					log.Println("OrderBookFollower error:", err)
+					close(obf)
+					return
+				}
+				defer ws.Close()
+			}
+
 			_, msg, err := ws.ReadMessage()
 			if err != nil {
 				log.Println("OrderBookFollower error:", err)
@@ -405,4 +415,13 @@ func sortOrders(orders *[]Order, ordering sortOrdering) error {
 	default:
 		return fmt.Errorf("Unknown sort order")
 	}
+}
+
+func newWebsocket() (*websocket.Conn, time.Time, error) {
+
+	ws, _, err := websocket.DefaultDialer.Dial(wsUrl(), nil)
+	if err != nil {
+		return nil, time.Time{}, err
+	}
+	return ws, time.Now(), nil
 }

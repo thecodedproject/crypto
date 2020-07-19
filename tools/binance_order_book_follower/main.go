@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-var logPeriod = 10*time.Second
+var logPeriod = 60*time.Second
 var volumePrice = 1.0
 
 type Stats struct {
@@ -58,9 +58,9 @@ func minutesAgo(i int) time.Time{
 
 func logStats(stats *Stats) {
 
-	minAgo := minutesAgo(1)
+	statsTime := minutesAgo(5)
 
-	bsWeight1min, err := stats.BuySellWeight.Sum(minAgo)
+	bsWeight1min, err := stats.BuySellWeight.Sum(statsTime)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -70,48 +70,48 @@ func logStats(stats *Stats) {
 		log.Fatal(err)
 	}
 
-	bestBid, err := stats.BestBid.Mean(minAgo)
+	bestBid, err := stats.BestBid.Mean(statsTime)
 	if err != nil {
 		log.Fatal(err)
 	}
-	bestBidVar, err := stats.BestBid.Variation(minAgo)
+	bestBidGrad, err := stats.BestBid.Gradient(statsTime)
 	if err != nil {
 		log.Fatal(err)
 	}
-	bestAsk, err := stats.BestAsk.Mean(minAgo)
+	bestAsk, err := stats.BestAsk.Mean(statsTime)
 	if err != nil {
 		log.Fatal(err)
 	}
-	bestAskVar, err := stats.BestAsk.Variation(minAgo)
+	bestAskGrad, err := stats.BestAsk.Gradient(statsTime)
 	if err != nil {
 		log.Fatal(err)
 	}
-	avSellPrice, err := stats.VolumeSellPrice.Mean(minAgo)
+	avSellPrice, err := stats.VolumeSellPrice.Mean(statsTime)
 	if err != nil {
 		log.Fatal(err)
 	}
-	avSellVariation, err := stats.VolumeSellPrice.Variation(minAgo)
+	avSellGrad, err := stats.VolumeSellPrice.Gradient(statsTime)
 	if err != nil {
 		log.Fatal(err)
 	}
-	avBuyPrice, err := stats.VolumeBuyPrice.Mean(minAgo)
+	avBuyPrice, err := stats.VolumeBuyPrice.Mean(statsTime)
 	if err != nil {
 		log.Fatal(err)
 	}
-	avBuyVariation, err := stats.VolumeBuyPrice.Variation(minAgo)
+	avBuyGrad, err := stats.VolumeBuyPrice.Gradient(statsTime)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	log.Printf("%.3f (%.3f)\t\t%.3f (%.3f)\t\t%.3f (%.3f)\t\t%.3f (%.3f)\t\t%.3f\t\t%.3f\n",
+	log.Printf("%.2f (%.2f)\t\t%.2f (%.2f)\t\t%.2f (%.2f)\t\t%.2f (%.2f)\t\t%.2f\t\t%.2f\n",
 		avSellPrice,
-		avSellVariation,
+		avSellGrad,
 		bestBid,
-		bestBidVar,
+		bestBidGrad,
 		bestAsk,
-		bestAskVar,
+		bestAskGrad,
 		avBuyPrice,
-		avBuyVariation,
+		avBuyGrad,
 		bsWeight1min,
 		bsWeight5min,
 	)
