@@ -13,6 +13,7 @@ type MovingStats interface {
 	Max(since time.Time) (float64, error)
 	Min(since time.Time) (float64, error)
 	Variation(since time.Time) (float64, error)
+	Gradient(since time.Time) (float64, error)
 }
 
 type movingStats struct {
@@ -107,6 +108,9 @@ func (ma *movingStats) Max(since time.Time) (float64, error) {
 	var max float64
 	var maxSet bool
 	for t, v := range ma.values {
+		if !t.After(since) {
+			continue
+		}
 		if !maxSet {
 			max = v
 			maxSet = true
@@ -135,6 +139,9 @@ func (ma *movingStats) Min(since time.Time) (float64, error) {
 	var min float64
 	var minSet bool
 	for t, v := range ma.values {
+		if !t.After(since) {
+			continue
+		}
 		if !minSet {
 			min = v
 			minSet = true
@@ -157,6 +164,53 @@ func (ma *movingStats) Variation(since time.Time) (float64, error) {
 		return 0.0, err
 	}
 	return max - min, nil
+}
+
+func (ma *movingStats) Gradient(since time.Time) (float64, error) {
+
+	if timeOutsideOfCache(since, ma.maxCacheDuration) {
+		return 0.0, fmt.Errorf(
+			"time since (%s) excceeds maxCacheDuration (%s)",
+			time.Now().Sub(since),
+			ma.maxCacheDuration,
+		)
+	}
+
+	if len(ma.values) == 0 {
+		return 0.0, nil
+	}
+
+	var firstValue float64
+	var firstValueTime time.Time
+	var lastValue float64
+	var lastValueTime time.Time
+	var initalValuesSet bool
+	for t, v := range ma.values {
+
+		if !t.After(since) {
+			continue
+		}
+		if !initalValuesSet {
+			firstValue = v
+			firstValueTime = t
+			lastValue = v
+			lastValueTime = t
+			initalValuesSet = true
+			continue
+		}
+		if t.Before(firstValueTime) {
+			firstValue = v
+			firstValueTime = t
+			continue
+		}
+		if t.After(lastValueTime) {
+			lastValue = v
+			lastValueTime = t
+			continue
+		}
+	}
+
+	return lastValue - firstValue, nil
 }
 
 func timeOutsideOfCache(t time.Time, maxCacheDuration time.Duration) bool {

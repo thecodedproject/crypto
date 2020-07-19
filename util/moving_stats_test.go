@@ -464,3 +464,98 @@ func TestMovingStatsVariation(t *testing.T) {
 	}
 }
 
+func TestMovingStatsGradient(t *testing.T) {
+
+	type TimeValue struct {
+		Time time.Time
+		Value float64
+	}
+
+	testCases := []struct{
+		Name string
+		Values []TimeValue
+		MaxDuration time.Duration
+		SinceTime time.Time
+		Expected float64
+		ExpectErr bool
+	}{
+		{
+			Name: "No values",
+			MaxDuration: time.Minute,
+			SinceTime: secondsAgo(10),
+			Expected: 0.0,
+		},
+		{
+			Name: "Single value within time since",
+			Values: []TimeValue{
+				{secondsAgo(1), 20.0},
+			},
+			MaxDuration: time.Hour,
+			SinceTime: secondsAgo(10),
+			Expected: 0.0,
+		},
+		{
+			Name: "Multiple values all within time since",
+			Values: []TimeValue{
+				{secondsAgo(1), 40.0},
+				{secondsAgo(2), 20.0},
+				{secondsAgo(3), 60.0},
+				{secondsAgo(4), 50.0},
+			},
+			MaxDuration: time.Hour,
+			SinceTime: secondsAgo(10),
+			Expected: -10.0,
+		},
+		{
+			Name: "All negative values",
+			Values: []TimeValue{
+				{secondsAgo(1), -30.0},
+				{secondsAgo(2), -10.0},
+				{secondsAgo(3), -60.0},
+				{secondsAgo(4), -50.0},
+			},
+			MaxDuration: time.Hour,
+			SinceTime: secondsAgo(10),
+			Expected: 20.0,
+		},
+		{
+			Name: "Multiple values with only some within since TimeSince",
+			Values: []TimeValue{
+				{secondsAgo(1), 20.0},
+				{secondsAgo(2), 70.0},
+				{secondsAgo(3), 40.0},
+				{secondsAgo(11), 10.0},
+				{secondsAgo(12), 50.0},
+			},
+			MaxDuration: time.Hour,
+			SinceTime: secondsAgo(10),
+			Expected: -20.0,
+		},
+		{
+			Name: "Request since time which is older than max duration returns error",
+			MaxDuration: time.Second,
+			SinceTime: secondsAgo(10),
+			ExpectErr: true,
+		},
+	}
+
+	for _, test := range testCases {
+		t.Run(test.Name, func(t *testing.T) {
+
+			ma := util.NewMovingStats(test.MaxDuration)
+
+			for _, v := range test.Values {
+				ma.Add(v.Time, v.Value)
+			}
+
+			av, err := ma.Gradient(test.SinceTime)
+			if test.ExpectErr {
+				require.Error(t, err)
+				return
+			}
+
+			require.NoError(t, err)
+			assert.Equal(t, test.Expected, av)
+		})
+	}
+}
