@@ -3,13 +3,14 @@ package main
 import (
 	"github.com/thecodedproject/crypto/exchangesdk"
 	"github.com/thecodedproject/crypto/exchangesdk/binance"
+	"github.com/thecodedproject/crypto/market_follower"
 	market_follower_stats"github.com/thecodedproject/crypto/market_follower/stats"
 	"github.com/thecodedproject/crypto/util"
 	"log"
 	"time"
 )
 
-var logPeriod = 60*time.Second
+var logPeriod = 10*time.Second
 var volumePrice = 1.0
 
 type Stats struct {
@@ -23,7 +24,7 @@ type Stats struct {
 	BuySellWeight util.MovingStats
 }
 
-func updateStatsWithOrderBook(stats *Stats, ob *binance.OrderBook) {
+func updateStatsWithOrderBook(stats *Stats, ob *market_follower.OrderBook) {
 
 	stats.BestBid.Add(ob.Timestamp, ob.Bids[0].Price)
 	stats.BestAsk.Add(ob.Timestamp, ob.Asks[0].Price)
@@ -37,10 +38,10 @@ func updateStatsWithOrderBook(stats *Stats, ob *binance.OrderBook) {
 	stats.VolumeSellPrice.Add(ob.Timestamp, sellPrice)
 }
 
-func updateStatsWithTrade(stats *Stats, trade *binance.Trade) {
+func updateStatsWithTrade(stats *Stats, trade *market_follower.Trade) {
 
 	weight := trade.Volume
-	if trade.MakerSide == binance.MarketSideBuy {
+	if trade.MakerSide == market_follower.MarketSideBuy {
 		weight = -weight
 	}
 
@@ -58,7 +59,7 @@ func minutesAgo(i int) time.Time{
 
 func logStats(stats *Stats) {
 
-	statsTime := minutesAgo(5)
+	statsTime := minutesAgo(1)
 
 	bsWeight1min, err := stats.BuySellWeight.Sum(statsTime)
 	if err != nil {

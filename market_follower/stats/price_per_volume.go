@@ -2,14 +2,14 @@ package stats
 
 import (
 	"errors"
-	"github.com/thecodedproject/crypto/exchangesdk/binance"
+	"github.com/thecodedproject/crypto/market_follower"
 )
 
 const (
 	ErrVolumePriceNotEnoughOrders = "Not enough order to calc VolumePrice"
 )
 
-func CalcPricePerVolumeStats(ob *binance.OrderBook, volume float64) (float64, float64, error) {
+func CalcPricePerVolumeStats(ob *market_follower.OrderBook, volume float64) (float64, float64, error) {
 
 	var err error
 	volumeBuyPrice, err := VolumePrice(
@@ -32,7 +32,7 @@ func CalcPricePerVolumeStats(ob *binance.OrderBook, volume float64) (float64, fl
 }
 
 func VolumePrice(
-	orders *[]binance.Order,
+	orders *[]market_follower.Order,
 	volume float64,
 ) (float64, error) {
 

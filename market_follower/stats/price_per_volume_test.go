@@ -2,8 +2,8 @@ package stats_test
 
 import (
 	"github.com/stretchr/testify/require"
+	"github.com/thecodedproject/crypto/market_follower"
 	"github.com/thecodedproject/crypto/market_follower/stats"
-	"github.com/thecodedproject/crypto/exchangesdk/binance"
 	"github.com/thecodedproject/gotest/assert"
 	"testing"
 	tfy_assert "github.com/stretchr/testify/assert"
@@ -13,7 +13,7 @@ func TestVolumePrice(t *testing.T) {
 
 	testCases := []struct {
 		name string
-		orders []binance.Order
+		orders []market_follower.Order
 		volume float64
 		precision int32
 		expectedPrice float64
@@ -21,7 +21,7 @@ func TestVolumePrice(t *testing.T) {
 	}{
 		{
 			name: "single order over volume price",
-			orders: []binance.Order{
+			orders: []market_follower.Order{
 				{
 					Price: 2.5,
 					Volume: 2.0,
@@ -33,7 +33,7 @@ func TestVolumePrice(t *testing.T) {
 		},
 		{
 			name: "multipl orders over volume price with equal volumes takes average",
-			orders: []binance.Order{
+			orders: []market_follower.Order{
 				{
 					Price: 1.0,
 					Volume: 0.5,
@@ -57,7 +57,7 @@ func TestVolumePrice(t *testing.T) {
 		},
 		{
 			name: "multipl orders over volume price with unequal volumes takes weighted average",
-			orders: []binance.Order{
+			orders: []market_follower.Order{
 				{
 					Price: 1.0,
 					Volume: 1.0,
@@ -81,7 +81,7 @@ func TestVolumePrice(t *testing.T) {
 		},
 		{
 			name: "orders which exceeed the volume are ignored",
-			orders: []binance.Order{
+			orders: []market_follower.Order{
 				{
 					Price: 1.0,
 					Volume: 1.0,
@@ -113,7 +113,7 @@ func TestVolumePrice(t *testing.T) {
 		},
 		{
 			name: "orders which don't make up volume returns ErrVolumePriceNotEnoughOrders",
-			orders: []binance.Order{
+			orders: []market_follower.Order{
 				{
 					Price: 1.0,
 					Volume: 1.0,
