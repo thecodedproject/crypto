@@ -6,7 +6,6 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/thecodedproject/crypto/exchangesdk"
 	"github.com/thecodedproject/crypto/exchangesdk/requestutil"
-	"github.com/thecodedproject/crypto/market_follower"
 	"log"
 	"net/http"
 	"net/url"
@@ -31,7 +30,7 @@ const (
 )
 
 type internalOrderBook struct {
-	market_follower.OrderBook
+	exchangesdk.OrderBook
 
 	lastUpdateId int64
 	volumePrice float64
@@ -39,7 +38,7 @@ type internalOrderBook struct {
 
 func NewOrderBookFollowerAndTradeStream(
 	pair exchangesdk.Pair,
-) (<-chan market_follower.OrderBook, <-chan market_follower.Trade) {
+) (<-chan exchangesdk.OrderBook, <-chan exchangesdk.OrderBookTrade) {
 
 	return followForever()
 }
@@ -58,10 +57,10 @@ func wsUrl() string {
 	return fullUrl
 }
 
-func followForever() (<-chan market_follower.OrderBook, <-chan market_follower.Trade) {
+func followForever() (<-chan exchangesdk.OrderBook, <-chan exchangesdk.OrderBookTrade) {
 
-	obf := make(chan market_follower.OrderBook, 1)
-	tradeStream := make(chan market_follower.Trade, 1)
+	obf := make(chan exchangesdk.OrderBook, 1)
+	tradeStream := make(chan exchangesdk.OrderBookTrade, 1)
 	var ws *websocket.Conn
 	wsAge := time.Time{}
 
@@ -168,7 +167,7 @@ func getLatestSnapshot() (internalOrderBook, error) {
 
 	ob := internalOrderBook{
 		lastUpdateId: snapshot.LastUpdateId,
-		OrderBook: market_follower.OrderBook{
+		OrderBook: exchangesdk.OrderBook{
 			Bids: bids,
 			Asks: asks,
 		},
@@ -232,7 +231,7 @@ func handleOrderBookUpdate(ob *internalOrderBook, updateMsg []byte) error {
 	return nil
 }
 
-func decodeTrade(msgData []byte) (market_follower.Trade, error) {
+func decodeTrade(msgData []byte) (exchangesdk.OrderBookTrade, error) {
 
 	tradeJson := struct{
 		Price float64 `json:"p,string"`
@@ -245,15 +244,15 @@ func decodeTrade(msgData []byte) (market_follower.Trade, error) {
 
 	err := json.Unmarshal(msgData, &tradeJson)
 	if err != nil {
-		return market_follower.Trade{}, err
+		return exchangesdk.OrderBookTrade{}, err
 	}
 
-	makerSide := market_follower.MarketSideSell
+	makerSide := exchangesdk.MarketSideSell
 	if tradeJson.BuyerIsMaker {
-		makerSide = market_follower.MarketSideBuy
+		makerSide = exchangesdk.MarketSideBuy
 	}
 
-	return market_follower.Trade{
+	return exchangesdk.OrderBookTrade{
 		MakerSide: makerSide,
 		Price: tradeJson.Price,
 		Volume: tradeJson.Volume,
@@ -261,17 +260,17 @@ func decodeTrade(msgData []byte) (market_follower.Trade, error) {
 	}, nil
 }
 
-func pricesEqual(a, b market_follower.Order) bool {
+func pricesEqual(a, b exchangesdk.OrderBookOrder) bool {
 
 	return math.Abs(a.Price-b.Price) < (MARKET_PRICE_PRECISION/float64(2))
 }
 
-func hasZeroVolume(o market_follower.Order) bool {
+func hasZeroVolume(o exchangesdk.OrderBookOrder) bool {
 
 	return math.Abs(o.Volume) < (MARKET_VOLUME_PRECISION/float64(2))
 }
 
-func UpdateOrders(currentOrders *[]market_follower.Order, updates [][]string) error {
+func UpdateOrders(currentOrders *[]exchangesdk.OrderBookOrder, updates [][]string) error {
 
 	for _, update := range updates {
 
@@ -304,9 +303,9 @@ func UpdateOrders(currentOrders *[]market_follower.Order, updates [][]string) er
 	return nil
 }
 
-func convertOrders(raw [][]string) ([]market_follower.Order, error) {
+func convertOrders(raw [][]string) ([]exchangesdk.OrderBookOrder, error) {
 
-	orders := make([]market_follower.Order, 0, len(raw))
+	orders := make([]exchangesdk.OrderBookOrder, 0, len(raw))
 	for _, o := range raw {
 
 		order, err := convertOrderStrings(o)
@@ -319,23 +318,23 @@ func convertOrders(raw [][]string) ([]market_follower.Order, error) {
 	return orders, nil
 }
 
-func convertOrderStrings(rawOrder []string) (market_follower.Order, error) {
+func convertOrderStrings(rawOrder []string) (exchangesdk.OrderBookOrder, error) {
 
 	if len(rawOrder) != 2 {
-		return market_follower.Order{}, fmt.Errorf("Raw order len != 2")
+		return exchangesdk.OrderBookOrder{}, fmt.Errorf("Raw order len != 2")
 	}
 
 	price, err := strconv.ParseFloat(rawOrder[0], 64)
 	if err != nil {
-		return market_follower.Order{}, err
+		return exchangesdk.OrderBookOrder{}, err
 	}
 
 	volume, err := strconv.ParseFloat(rawOrder[1], 64)
 	if err != nil {
-		return market_follower.Order{}, err
+		return exchangesdk.OrderBookOrder{}, err
 	}
 
-	return market_follower.Order{
+	return exchangesdk.OrderBookOrder{
 		Price: price,
 		Volume: volume,
 	}, nil
@@ -362,7 +361,7 @@ const (
 	sortOrderingUnknown
 )
 
-func sortOrders(orders *[]market_follower.Order, ordering sortOrdering) error {
+func sortOrders(orders *[]exchangesdk.OrderBookOrder, ordering sortOrdering) error {
 
 
 	switch ordering {

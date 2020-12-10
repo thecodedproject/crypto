@@ -3,8 +3,7 @@ package main
 import (
 	"github.com/thecodedproject/crypto/exchangesdk"
 	"github.com/thecodedproject/crypto/exchangesdk/binance"
-	"github.com/thecodedproject/crypto/market_follower"
-	market_follower_stats"github.com/thecodedproject/crypto/market_follower/stats"
+	"github.com/thecodedproject/crypto/exchangesdk/market_stats"
 	"github.com/thecodedproject/crypto/util"
 	"log"
 	"time"
@@ -24,12 +23,12 @@ type Stats struct {
 	BuySellWeight util.MovingStats
 }
 
-func updateStatsWithOrderBook(stats *Stats, ob *market_follower.OrderBook) {
+func updateStatsWithOrderBook(stats *Stats, ob *exchangesdk.OrderBook) {
 
 	stats.BestBid.Add(ob.Timestamp, ob.Bids[0].Price)
 	stats.BestAsk.Add(ob.Timestamp, ob.Asks[0].Price)
 
-	buyPrice, sellPrice, err := market_follower_stats.CalcPricePerVolumeStats(ob, volumePrice)
+	buyPrice, sellPrice, err := market_stats.CalcPricePerVolumeStats(ob, volumePrice)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -38,10 +37,10 @@ func updateStatsWithOrderBook(stats *Stats, ob *market_follower.OrderBook) {
 	stats.VolumeSellPrice.Add(ob.Timestamp, sellPrice)
 }
 
-func updateStatsWithTrade(stats *Stats, trade *market_follower.Trade) {
+func updateStatsWithTrade(stats *Stats, trade *exchangesdk.OrderBookTrade) {
 
 	weight := trade.Volume
-	if trade.MakerSide == market_follower.MarketSideBuy {
+	if trade.MakerSide == exchangesdk.MarketSideBuy {
 		weight = -weight
 	}
 

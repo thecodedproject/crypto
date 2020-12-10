@@ -6,6 +6,8 @@ import (
 	"time"
 )
 
+// DEPRECATED: Use the MarketSide type instead
+// TODO Replace this type with MarketSide
 type OrderType string
 
 const (
@@ -26,8 +28,9 @@ type OrderStatus struct {
 	FillAmountBase decimal.Decimal
 }
 
-// TODO Refactor to create a seperate OrderRequest struct which ocntains only the
-// price volume and type, then use that as arg for `PostLimitOrder`
+// TODO Rename to LimitOrder (this type represents a placed limit order only - and not a generic 'order')
+// In general, we are moving to a place where there is no single `Order` type, but specialisations of Order
+// i.e. LimitOrder, OrderBookOrder, StopLimitOrder.
 type Order struct {
 	Id string `json:"id"`
 	Timestamp time.Time `json:"timestamp"`

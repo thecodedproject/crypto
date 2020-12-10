@@ -1,3 +1,4 @@
 *.sw*
 .DS_Store
 api_auth.json
+.idea
