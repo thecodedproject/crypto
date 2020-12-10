@@ -31,9 +31,7 @@ const (
 
 type internalOrderBook struct {
 	exchangesdk.OrderBook
-
 	lastUpdateId int64
-	volumePrice float64
 }
 
 func NewOrderBookFollowerAndTradeStream(
@@ -121,7 +119,7 @@ func followForever() (<-chan exchangesdk.OrderBook, <-chan exchangesdk.OrderBook
 				trade, err := decodeTrade(update.Data)
 				if err != nil {
 					log.Println("OrderBookFollower error:", err)
-					close(obf)
+					close(tradeStream)
 					return
 				}
 				tradeStream <- trade
@@ -340,6 +338,7 @@ func convertOrderStrings(rawOrder []string) (exchangesdk.OrderBookOrder, error) 
 	}, nil
 }
 
+// DEPRECATED Use exchangesdk.SortOrderBook instead
 func sortOrderBook(ob *internalOrderBook) error {
 
 	err := sortOrders(&ob.Bids, sortOrderingDecending)
