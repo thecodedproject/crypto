@@ -139,13 +139,14 @@ func followForever(
 				log.Fatal("ReadMessage error:", err)
 			}
 
-			if string(msg) == "" {
+			if string(msg) == "\"\"" {
+				// Keep alive message - do not consume
 				continue
 			}
 
 			update := OrderBookUpdate{}
 			if err := json.Unmarshal(msg, &update); err != nil {
-				log.Fatal(err, string(msg))
+				log.Fatal(err, ": ", string(msg))
 			}
 
 			obUpdated, err := HandleUpdate(&ob, update)
