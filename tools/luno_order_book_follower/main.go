@@ -4,6 +4,7 @@ import (
 	"github.com/thecodedproject/crypto/exchangesdk"
 	"github.com/thecodedproject/crypto/exchangesdk/luno"
 	"github.com/thecodedproject/crypto/exchangesdk/market_stats"
+	"github.com/thecodedproject/crypto"
 	"github.com/thecodedproject/crypto/io"
 	"github.com/thecodedproject/crypto/util"
 	"log"
@@ -125,7 +126,7 @@ func nextLogPeriod() time.Duration {
 	return startOfNextEpoch.Sub(time.Now())
 }
 
-func logStatsForever(apiCreds io.AuthConfig) {
+func logStatsForever(apiCreds crypto.AuthConfig) {
 
 	obf, tradeStream := luno.NewOrderBookFollowerAndTradeStream(
 		exchangesdk.BTCEUR,

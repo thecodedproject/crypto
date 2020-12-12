@@ -48,7 +48,7 @@ func main() {
 
 	flag.Parse()
 
-	auth, err := io.ReadAuthFile(*authPath)
+	auth, err := io.GetApiAuthByName(*authPath, "luno_api_key")
 	if err != nil {
 		log.Fatal(err)
 	}
