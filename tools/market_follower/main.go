@@ -1,12 +1,20 @@
 package main
 
 import (
+	"context"
+	"flag"
 	"github.com/thecodedproject/crypto/exchangesdk"
-	"github.com/thecodedproject/crypto/exchangesdk/binance"
+	"github.com/thecodedproject/crypto/exchangesdk/factory"
 	"github.com/thecodedproject/crypto/exchangesdk/market_stats"
 	"github.com/thecodedproject/crypto/util"
+	"github.com/thecodedproject/crypto"
+	"github.com/thecodedproject/crypto/io"
 	"log"
+	"sync"
 	"time"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 var logPeriod = 10*time.Second
@@ -124,11 +132,22 @@ func nextLogPeriod() time.Duration {
 	return startOfNextEpoch.Sub(time.Now())
 }
 
-func logStatsForever() {
+func logStatsForever(
+	ctx context.Context,
+	wg *sync.WaitGroup,
+	apiAuth crypto.AuthConfig,
+) {
 
-	obf, tradeStream := binance.NewOrderBookFollowerAndTradeStream(
+	wg.Add(1)
+	obf, tradeStream, err := factory.NewMarketFollower(
+		ctx,
+		wg,
 		exchangesdk.BTCEUR,
+		apiAuth,
 	)
+	if err != nil {
+		log.Fatal("failed to create market follower:", err)
+	}
 
 	log.Printf("VolSell (var.)\t\tBestBid (var.)\t\tBestAsk (var.)\t\tVolBuy (var.)\t\tBSWeight(1m)\t\tBSWeight(5m)\n")
 
@@ -141,27 +160,77 @@ func logStatsForever() {
 
 	for {
 		select {
-			case ob, more := <-obf:
-				if more {
-					updateStatsWithOrderBook(&stats, &ob)
-				} else {
-					log.Println("obf closed")
-					return
-				}
-			case trade, more := <-tradeStream:
-				if more {
-					updateStatsWithTrade(&stats, &trade)
-				} else {
-					log.Println("trade stream closed")
-					return
-				}
-			case <-time.After(nextLogPeriod()):
-				logStats(&stats)
+		case ob, more := <-obf:
+			if more {
+				updateStatsWithOrderBook(&stats, &ob)
+			} else {
+				log.Println("obf closed")
+				wg.Done()
+				return
+			}
+		case trade, more := <-tradeStream:
+			if more {
+				updateStatsWithTrade(&stats, &trade)
+			} else {
+				log.Println("trade stream closed")
+				wg.Done()
+				return
+			}
+		case <-time.After(nextLogPeriod()):
+			logStats(&stats)
+		case <-ctx.Done():
+			wg.Done()
+			return
 		}
 	}
 }
 
 func main() {
 
-	logStatsForever()
+	flag.Parse()
+	if flag.NArg() != 1 {
+		log.Fatal("Usage: market_follower [luno|binance|dummy]")
+	}
+
+	var apiCreds crypto.AuthConfig
+	switch flag.Arg(0) {
+	case "luno":
+		var err error
+		apiCreds, err = io.GetAuthConfigByName(
+			"api_auth.json",
+			"luno_jcooper_readonly_test_20201210",
+		)
+		if err != nil {
+			log.Fatal(err)
+		}
+	case "binance":
+		// Binance doesnt require api creds
+		apiCreds = crypto.AuthConfig{
+			ApiExchange: crypto.ExchangeBinance,
+		}
+	case "dummy":
+		// Dummy exchange doesnt require api creds
+		apiCreds = crypto.AuthConfig{
+			ApiExchange: crypto.ExchangeDummyExchange,
+		}
+	default:
+		log.Fatal("Unknown exchange:", flag.Arg(0))
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	var wg sync.WaitGroup
+
+	wg.Add(1)
+	go logStatsForever(ctx, &wg, apiCreds)
+
+	ch := make(chan os.Signal, 1)
+	signal.Notify(ch, syscall.SIGTERM, syscall.SIGINT)
+
+	select {
+	case sig := <-ch:
+		log.Println("Received OS signal:", sig.String())
+		cancel()
+		wg.Wait()
+		return
+	}
 }

@@ -1,14 +1,15 @@
 package luno
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math"
-	//"github.com/shopspring/decimal"
-	"github.com/thecodedproject/crypto/exchangesdk"
 	"github.com/gorilla/websocket"
+	"github.com/thecodedproject/crypto/exchangesdk"
 	"log"
+	"math"
+	"sync"
 	"time"
 )
 
@@ -74,25 +75,31 @@ type OrderBookUpdate struct {
 
 
 func NewOrderBookFollowerAndTradeStream(
+	ctx context.Context,
+	wg *sync.WaitGroup,
 	pair exchangesdk.Pair,
 	apiKey string,
 	apiSecret string,
-) (<-chan exchangesdk.OrderBook, <-chan exchangesdk.OrderBookTrade) {
+) (<-chan exchangesdk.OrderBook, <-chan exchangesdk.OrderBookTrade, error) {
 
 	if pair != exchangesdk.BTCEUR {
-		log.Fatal("Only BTCEUR is supported")
+		return nil, nil, errors.New("Only BTCEUR is supported")
 	}
 
 	return followForever(
+		ctx,
+		wg,
 		apiKey,
 		apiSecret,
 	)
 }
 
 func followForever(
+	ctx context.Context,
+	wg *sync.WaitGroup,
 	apiKey string,
 	apiSecret string,
-) (<-chan exchangesdk.OrderBook, <-chan exchangesdk.OrderBookTrade) {
+) (<-chan exchangesdk.OrderBook, <-chan exchangesdk.OrderBookTrade, error) {
 
 	log.Println("Running obf")
 
@@ -168,10 +175,18 @@ func followForever(
 				}
 				tradeStream <- t
 			}
+
+			select{
+			case <-ctx.Done():
+				wg.Done()
+				return
+			default:
+				continue
+			}
 		}
 	}()
 
-	return obf, tradeStream
+	return obf, tradeStream, nil
 }
 
 

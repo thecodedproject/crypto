@@ -6,9 +6,10 @@ type Exchange int
 
 const (
 	ExchangeUnknown Exchange = 0
-	ExchangeLuno Exchange = 1
-	ExchangeBinance Exchange = 2
-	ExchangeSentinal Exchange = 3
+	ExchangeDummyExchange Exchange = 1
+	ExchangeLuno Exchange = 2
+	ExchangeBinance Exchange = 3
+	ExchangeSentinal Exchange = 4
 )
 
 type AuthConfig struct {

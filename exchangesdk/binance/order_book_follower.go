@@ -1,18 +1,21 @@
 package binance
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/gorilla/websocket"
 	"github.com/thecodedproject/crypto/exchangesdk"
 	"github.com/thecodedproject/crypto/exchangesdk/requestutil"
 	"log"
+	"math"
 	"net/http"
 	"net/url"
 	"sort"
-	"time"
-	"math"
 	"strconv"
+	"sync"
+	"time"
 )
 
 const (
@@ -34,11 +37,20 @@ type internalOrderBook struct {
 	lastUpdateId int64
 }
 
-func NewOrderBookFollowerAndTradeStream(
+func NewMarketFollower(
+	ctx context.Context,
+	wg *sync.WaitGroup,
 	pair exchangesdk.Pair,
-) (<-chan exchangesdk.OrderBook, <-chan exchangesdk.OrderBookTrade) {
+) (<-chan exchangesdk.OrderBook, <-chan exchangesdk.OrderBookTrade, error) {
 
-	return followForever()
+	if pair != exchangesdk.BTCEUR {
+		return nil, nil, errors.New("Only BTCEUR is supported")
+	}
+
+	return followForever(
+		ctx,
+		wg,
+	)
 }
 
 func wsUrl() string {
@@ -55,7 +67,10 @@ func wsUrl() string {
 	return fullUrl
 }
 
-func followForever() (<-chan exchangesdk.OrderBook, <-chan exchangesdk.OrderBookTrade) {
+func followForever(
+	ctx context.Context,
+	wg *sync.WaitGroup,
+) (<-chan exchangesdk.OrderBook, <-chan exchangesdk.OrderBookTrade, error) {
 
 	obf := make(chan exchangesdk.OrderBook, 1)
 	tradeStream := make(chan exchangesdk.OrderBookTrade, 1)
@@ -68,6 +83,7 @@ func followForever() (<-chan exchangesdk.OrderBook, <-chan exchangesdk.OrderBook
 		if err != nil {
 			log.Println("OrderBookFollower error:", err)
 			close(obf)
+			wg.Done()
 			return
 		}
 
@@ -81,6 +97,7 @@ func followForever() (<-chan exchangesdk.OrderBook, <-chan exchangesdk.OrderBook
 				if err != nil {
 					log.Println("OrderBookFollower error:", err)
 					close(obf)
+					wg.Done()
 					return
 				}
 				defer ws.Close()
@@ -90,6 +107,7 @@ func followForever() (<-chan exchangesdk.OrderBook, <-chan exchangesdk.OrderBook
 			if err != nil {
 				log.Println("OrderBookFollower error:", err)
 				close(obf)
+				wg.Done()
 				return
 			}
 
@@ -102,6 +120,7 @@ func followForever() (<-chan exchangesdk.OrderBook, <-chan exchangesdk.OrderBook
 			if err != nil {
 				log.Println("OrderBookFollower error:", err, string(msg))
 				close(obf)
+				wg.Done()
 				return
 			}
 
@@ -111,6 +130,7 @@ func followForever() (<-chan exchangesdk.OrderBook, <-chan exchangesdk.OrderBook
 				if err != nil {
 					log.Println("OrderBookFollower error:", err)
 					close(obf)
+					wg.Done()
 					return
 				}
 
@@ -120,14 +140,23 @@ func followForever() (<-chan exchangesdk.OrderBook, <-chan exchangesdk.OrderBook
 				if err != nil {
 					log.Println("OrderBookFollower error:", err)
 					close(tradeStream)
+					wg.Done()
 					return
 				}
 				tradeStream <- trade
 			}
+
+			select{
+			case <-ctx.Done():
+				wg.Done()
+				return
+			default:
+				continue
+			}
 		}
 	}()
 
-	return obf, tradeStream
+	return obf, tradeStream, nil
 }
 
 func getLatestSnapshot() (internalOrderBook, error) {

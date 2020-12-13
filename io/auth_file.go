@@ -27,7 +27,7 @@ func ReadAuthFile(authPath string) (map[string]crypto.AuthConfig, error) {
 	return keys.ApiKeys, nil
 }
 
-func GetApiAuthByName(
+func GetAuthConfigByName(
 	authFilePath string,
 	keyName string,
 ) (crypto.AuthConfig, error) {

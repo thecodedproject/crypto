@@ -8,9 +8,9 @@ import (
 	"fmt"
 )
 
-const _ExchangeName = "UnknownLunoBinanceSentinal"
+const _ExchangeName = "UnknownDummyExchangeLunoBinanceSentinal"
 
-var _ExchangeIndex = [...]uint8{0, 7, 11, 18, 26}
+var _ExchangeIndex = [...]uint8{0, 7, 20, 24, 31, 39}
 
 func (i Exchange) String() string {
 	if i < 0 || i >= Exchange(len(_ExchangeIndex)-1) {
@@ -19,13 +19,14 @@ func (i Exchange) String() string {
 	return _ExchangeName[_ExchangeIndex[i]:_ExchangeIndex[i+1]]
 }
 
-var _ExchangeValues = []Exchange{0, 1, 2, 3}
+var _ExchangeValues = []Exchange{0, 1, 2, 3, 4}
 
 var _ExchangeNameToValueMap = map[string]Exchange{
 	_ExchangeName[0:7]:   0,
-	_ExchangeName[7:11]:  1,
-	_ExchangeName[11:18]: 2,
-	_ExchangeName[18:26]: 3,
+	_ExchangeName[7:20]:  1,
+	_ExchangeName[20:24]: 2,
+	_ExchangeName[24:31]: 3,
+	_ExchangeName[31:39]: 4,
 }
 
 // ExchangeString retrieves an enum value from the enum constants string name.
