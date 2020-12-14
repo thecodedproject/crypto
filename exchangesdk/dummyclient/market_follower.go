@@ -5,6 +5,8 @@ import (
 	"github.com/thecodedproject/crypto/exchangesdk"
 	"sync"
 	"time"
+
+	"fmt"
 )
 
 func NewMarketFollower(
@@ -20,6 +22,7 @@ func NewMarketFollower(
 		for {
 			select {
 			case <-ctx.Done():
+				fmt.Println("dummyclient: context Done")
 				wg.Done()
 				return
 			case <-time.After(time.Second):
