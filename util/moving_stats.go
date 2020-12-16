@@ -8,6 +8,7 @@ import(
 type MovingStats interface {
 	Add(t time.Time, v float64)
 
+	Latest() float64
 	Mean(since time.Time) (float64, error)
 	Sum(since time.Time) (float64, error)
 	Max(since time.Time) (float64, error)
@@ -39,6 +40,22 @@ func (ma *movingStats) Add(t time.Time, v float64) {
 			delete(ma.values, valueTime)
 		}
 	}
+}
+
+func (ma *movingStats) Latest() float64 {
+
+	if len(ma.values) == 0 {
+		return 0.0
+	}
+
+	var latestT time.Time
+	for t := range ma.values {
+		if t.After(latestT) {
+			latestT = t
+		}
+	}
+
+	return ma.values[latestT]
 }
 
 func (ma *movingStats) Mean(since time.Time) (float64, error) {

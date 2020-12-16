@@ -1,6 +1,6 @@
 package crypto
 
-//go:generate enumer -type=Exchange -trimprefix=Exchange -json
+//go:generate enumer -type=Exchange -trimprefix=Exchange -json -text -transform=snake
 
 type Exchange int
 

@@ -13,6 +13,47 @@ func secondsAgo(i int) time.Time {
 	return time.Now().Add(time.Duration(-i)*time.Second)
 }
 
+func TestMovingStatsLatest(t * testing.T) {
+	type TimeValue struct {
+		Time time.Time
+		Value float64
+	}
+
+	testCases := []struct{
+		Name string
+		Values []TimeValue
+		Expected float64
+	}{
+		{
+			Name: "No values returns zero",
+		},
+		{
+			Name: "Some values returns the latest",
+			Values: []TimeValue{
+				{secondsAgo(100), 20.0},
+				{secondsAgo(10), 22.0},
+				{secondsAgo(1), 24.0},
+			},
+			Expected: 24.0,
+		},
+	}
+
+	for _, test := range testCases {
+		t.Run(test.Name, func(t *testing.T) {
+
+			ms := util.NewMovingStats(time.Minute)
+
+			for _, v := range test.Values {
+				ms.Add(v.Time, v.Value)
+			}
+
+			val := ms.Latest()
+			assert.Equal(t, test.Expected, val)
+		})
+	}
+
+}
+
 func TestMovingStatsMean(t *testing.T) {
 
 	type TimeValue struct {
