@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gorilla/websocket"
+	"github.com/thecodedproject/crypto"
 	"github.com/thecodedproject/crypto/exchangesdk"
 	"log"
 	"math"
@@ -13,13 +14,10 @@ import (
 	"time"
 )
 
-const (
-	wsUrl = "wss://ws.luno.com/api/1/stream/XBTEUR"
-
-	// TODO: Set these in a more robust way
-	MARKET_PRICE_PRECISION = 0.01
-	MARKET_VOLUME_PRECISION = 1e-8
-)
+type exchangeConfig struct {
+	WsUrl string
+	MarketVolumePrecision float64
+}
 
 type InternalOrderBook struct {
 	Bids map[string]Order
@@ -77,26 +75,47 @@ type OrderBookUpdate struct {
 func NewOrderBookFollowerAndTradeStream(
 	ctx context.Context,
 	wg *sync.WaitGroup,
-	pair exchangesdk.Pair,
+	pair crypto.Pair,
 	apiKey string,
 	apiSecret string,
 ) (<-chan exchangesdk.OrderBook, <-chan exchangesdk.OrderBookTrade, error) {
 
-	if pair != exchangesdk.BTCEUR {
-		return nil, nil, errors.New("Only BTCEUR is supported")
+	exConf, err := getExchangeConfig(pair)
+	if err != nil {
+		return nil, nil, err
 	}
 
 	return followForever(
 		ctx,
 		wg,
+		exConf,
 		apiKey,
 		apiSecret,
 	)
 }
 
+func getExchangeConfig(pair crypto.Pair) (exchangeConfig, error) {
+
+	switch pair {
+	case crypto.PairBTCEUR:
+		return exchangeConfig{
+			WsUrl: "wss://ws.luno.com/api/1/stream/XBTEUR",
+			MarketVolumePrecision: 1e-8,
+		}, nil
+	case crypto.PairLTCBTC:
+		return exchangeConfig{
+			WsUrl: "wss://ws.luno.com/api/1/stream/LTCXBT",
+			MarketVolumePrecision: 1e-2,
+		}, nil
+	default:
+		return exchangeConfig{}, fmt.Errorf("%s pair is not support by Luno market follower", pair)
+	}
+}
+
 func followForever(
 	ctx context.Context,
 	wg *sync.WaitGroup,
+	exConf exchangeConfig,
 	apiKey string,
 	apiSecret string,
 ) (<-chan exchangesdk.OrderBook, <-chan exchangesdk.OrderBookTrade, error) {
@@ -109,7 +128,7 @@ func followForever(
 
 	go func() {
 
-		ws, _, err := websocket.DefaultDialer.Dial(wsUrl, nil)
+		ws, _, err := websocket.DefaultDialer.Dial(exConf.WsUrl, nil)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -156,10 +175,11 @@ func followForever(
 				log.Fatal(err, ": ", string(msg))
 			}
 
-			obUpdated, err := HandleUpdate(&ob, update)
+			obUpdated, err := HandleUpdate(&ob, update, exConf.MarketVolumePrecision)
 			if err != nil {
 				log.Println("OrderBookFollower error:", err)
 				close(obf)
+				wg.Done()
 				return
 			}
 			if obUpdated {
@@ -171,6 +191,7 @@ func followForever(
 				if err != nil {
 					log.Println("TradeStream error:", err)
 					close(tradeStream)
+					wg.Done()
 					return
 				}
 				tradeStream <- t
@@ -234,7 +255,7 @@ func toSortedOrderBook(ob *InternalOrderBook) *exchangesdk.OrderBook {
 	return &o
 }
 
-func HandleUpdate(ob *InternalOrderBook, u OrderBookUpdate) (bool, error) {
+func HandleUpdate(ob *InternalOrderBook, u OrderBookUpdate, volPrecision float64) (bool, error) {
 
 	var updated bool
 
@@ -248,7 +269,7 @@ func HandleUpdate(ob *InternalOrderBook, u OrderBookUpdate) (bool, error) {
 
 	for _, t := range u.TradeUpdates {
 		updated = true
-		if err := HandleTrade(ob, t); err != nil {
+		if err := HandleTrade(ob, t, volPrecision); err != nil {
 			return updated, err
 		}
 	}
@@ -273,12 +294,12 @@ func HandleUpdate(ob *InternalOrderBook, u OrderBookUpdate) (bool, error) {
 	return updated, nil
 }
 
-func HandleTrade(ob *InternalOrderBook, t *TradeUpdate) error {
+func HandleTrade(ob *InternalOrderBook, t *TradeUpdate, volPrecision float64) error {
 	if t.Base < 0 {
 		return fmt.Errorf("negative trade base")
 	}
 
-	orderUpdated, err := updateOrdersWithTrade(ob.Bids, t.MakerOrderId, t.Base)
+	orderUpdated, err := updateOrdersWithTrade(ob.Bids, t.MakerOrderId, t.Base, volPrecision)
 	if err != nil {
 		return err
 	}
@@ -286,7 +307,7 @@ func HandleTrade(ob *InternalOrderBook, t *TradeUpdate) error {
 		return nil
 	}
 
-	orderUpdated, err = updateOrdersWithTrade(ob.Asks, t.MakerOrderId, t.Base)
+	orderUpdated, err = updateOrdersWithTrade(ob.Asks, t.MakerOrderId, t.Base, volPrecision)
 	if err != nil {
 		return err
 	}
@@ -301,6 +322,7 @@ func updateOrdersWithTrade(
 	m map[string]Order,
 	id string,
 	tradeVolume float64,
+	volPrecision float64,
 ) (bool, error) {
 
 	o, ok := m[id]
@@ -317,7 +339,7 @@ func updateOrdersWithTrade(
 		)
 	}
 
-	if hasZeroVolume(o) {
+	if hasZeroVolume(o, volPrecision) {
 		delete(m, id)
 	} else {
 		m[id] = o
@@ -379,7 +401,10 @@ func convertToSdkTrade(
 	}, nil
 }
 
-func hasZeroVolume(o Order) bool {
+func hasZeroVolume(
+	o Order,
+	volPrecision float64,
+) bool {
 
-	return math.Abs(o.Volume) < (MARKET_VOLUME_PRECISION/float64(2))
+	return math.Abs(o.Volume) < (volPrecision/float64(2))
 }

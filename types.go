@@ -1,19 +1,37 @@
 package crypto
 
-//go:generate enumer -type=Exchange -trimprefix=Exchange -json -text -transform=snake
+//go:generate enumer -type=ApiProvider -trimprefix=ApiProvider -json -text -transform=snake
+//go:generate enumer -type=Pair -trimprefix=Pair -json -text -transform=snake
 
-type Exchange int
+//ApiProvider represents the company that provides an API (e.g. Luno or Binance)
+type ApiProvider int
 
 const (
-	ExchangeUnknown Exchange = 0
-	ExchangeDummyExchange Exchange = 1
-	ExchangeLuno Exchange = 2
-	ExchangeBinance Exchange = 3
-	ExchangeSentinal Exchange = 4
+	ApiProviderUnknown ApiProvider = 0
+	ApiProviderDummyExchange ApiProvider = 1
+	ApiProviderLuno ApiProvider = 2
+	ApiProviderBinance ApiProvider = 3
+	ApiProviderSentinal ApiProvider = 4
 )
 
 type AuthConfig struct {
-	ApiExchange Exchange `json:"exchange"`
-	ApiKey string `json:"api_key"`
-	ApiSecret string `json:"api_secret"`
+	Provider ApiProvider `json:"provider"`
+	Key string `json:"key"`
+	Secret string `json:"secret"`
+}
+
+type Pair int
+
+const (
+	PairUnknown Pair = 0
+	PairBTCEUR Pair = 1
+	PairBTCUSDT Pair = 2
+
+	PairLTCBTC Pair = 3
+	PairSentinal Pair = 4
+)
+
+type Exchange struct {
+	Provider ApiProvider
+	Pair Pair
 }

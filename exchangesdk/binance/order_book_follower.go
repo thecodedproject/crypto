@@ -3,9 +3,9 @@ package binance
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/gorilla/websocket"
+	"github.com/thecodedproject/crypto"
 	"github.com/thecodedproject/crypto/exchangesdk"
 	"github.com/thecodedproject/crypto/exchangesdk/requestutil"
 	"log"
@@ -19,18 +19,16 @@ import (
 )
 
 const (
-	obUrl = "https://api.binance.com/api/v1/depth"
-
-	orderBookStream = "btceur@depth"
-	tradesStream = "btceur@trade"
-	wsBaseUrl = "wss://stream.binance.com:9443/stream"
-
-	// TODO: Set these in a more robust way
-	MARKET_PRICE_PRECISION = 0.01
-	MARKET_VOLUME_PRECISION = 1e-8
-
 	WEBSOCKET_LIFETIME = 55*time.Minute
 )
+
+type ExchangeConfig struct {
+	OrderBookStream string
+	TradesStream string
+	PairCode string
+	PricePrecision float64
+	VolPrecision float64
+}
 
 type internalOrderBook struct {
 	exchangesdk.OrderBook
@@ -40,46 +38,70 @@ type internalOrderBook struct {
 func NewMarketFollower(
 	ctx context.Context,
 	wg *sync.WaitGroup,
-	pair exchangesdk.Pair,
+	pair crypto.Pair,
 ) (<-chan exchangesdk.OrderBook, <-chan exchangesdk.OrderBookTrade, error) {
 
-	if pair != exchangesdk.BTCEUR {
-		return nil, nil, errors.New("Only BTCEUR is supported")
+	exConf, err := getExchangeConfig(pair)
+	if err != nil {
+		return nil, nil, err
 	}
 
 	return followForever(
 		ctx,
 		wg,
+		exConf,
 	)
 }
 
-func wsUrl() string {
+func getExchangeConfig(pair crypto.Pair) (ExchangeConfig, error) {
 
-	// Building the URL with the `url` package (using a values type)
-	// seems to cause errors when connecting to the websocket - so
-	// doing string manipulation instead
-	fullUrl := fmt.Sprintf(
-		"%s?streams=%s/%s",
-		wsBaseUrl,
-		orderBookStream,
-		tradesStream,
+	switch pair {
+	case crypto.PairBTCEUR:
+		return ExchangeConfig{
+			OrderBookStream: "btceur@depth",
+			TradesStream: "btceur@trade",
+			PairCode: "BTCEUR",
+			PricePrecision: 1e-2,
+			VolPrecision: 1e-8,
+		}, nil
+	case crypto.PairBTCUSDT:
+		return ExchangeConfig{
+			OrderBookStream: "btcusdt@depth",
+			TradesStream: "btcusdt@trade",
+			PairCode: "BTCUSDT",
+			PricePrecision: 1e-2,
+			VolPrecision: 1e-8,
+		}, nil
+	default:
+		return ExchangeConfig{}, fmt.Errorf("%s pair is not support by Binance market follower", pair)
+	}
+}
+
+func buildWsUrl(exConf ExchangeConfig) string {
+
+	wsUrl := fmt.Sprintf(
+		"wss://stream.binance.com:9443/stream?streams=%s/%s",
+		exConf.OrderBookStream,
+		exConf.TradesStream,
 	)
-	return fullUrl
+	return wsUrl
 }
 
 func followForever(
 	ctx context.Context,
 	wg *sync.WaitGroup,
+	exConf ExchangeConfig,
 ) (<-chan exchangesdk.OrderBook, <-chan exchangesdk.OrderBookTrade, error) {
 
 	obf := make(chan exchangesdk.OrderBook, 1)
 	tradeStream := make(chan exchangesdk.OrderBookTrade, 1)
 	var ws *websocket.Conn
 	wsAge := time.Time{}
+	wsUrl := buildWsUrl(exConf)
 
 	go func() {
 
-		ob, err := getLatestSnapshot()
+		ob, err := getLatestSnapshot(exConf.PairCode)
 		if err != nil {
 			log.Println("OrderBookFollower error:", err)
 			close(obf)
@@ -89,11 +111,10 @@ func followForever(
 
 		for {
 			if wsAge.Before(time.Now().Add(-WEBSOCKET_LIFETIME)) {
-				log.Println("New ws!!")
 				if ws != nil {
 					ws.Close()
 				}
-				ws, wsAge, err = newWebsocket()
+				ws, wsAge, err = newWebsocket(wsUrl)
 				if err != nil {
 					log.Println("OrderBookFollower error:", err)
 					close(obf)
@@ -125,8 +146,8 @@ func followForever(
 			}
 
 			switch update.Stream {
-			case orderBookStream:
-				err := handleOrderBookUpdate(&ob, update.Data)
+			case exConf.OrderBookStream:
+				err := handleOrderBookUpdate(&ob, update.Data, exConf)
 				if err != nil {
 					log.Println("OrderBookFollower error:", err)
 					close(obf)
@@ -135,7 +156,7 @@ func followForever(
 				}
 
 				obf <- ob.OrderBook
-			case tradesStream:
+			case exConf.TradesStream:
 				trade, err := decodeTrade(update.Data)
 				if err != nil {
 					log.Println("OrderBookFollower error:", err)
@@ -159,11 +180,11 @@ func followForever(
 	return obf, tradeStream, nil
 }
 
-func getLatestSnapshot() (internalOrderBook, error) {
+func getLatestSnapshot(pairCode string) (internalOrderBook, error) {
 
 	path := requestutil.FullPath(baseUrl, "api/v3/depth")
 	values := url.Values{}
-	values.Add("symbol", "BTCEUR")
+	values.Add("symbol", pairCode)
 	values.Add("limit", "1000")
 	path.RawQuery = values.Encode()
 
@@ -208,7 +229,11 @@ func getLatestSnapshot() (internalOrderBook, error) {
 	return ob, nil
 }
 
-func handleOrderBookUpdate(ob *internalOrderBook, updateMsg []byte) error {
+func handleOrderBookUpdate(
+	ob *internalOrderBook,
+	updateMsg []byte,
+	exConf ExchangeConfig,
+) error {
 
 	update := struct{
 		FirstUpdateId int64 `json:"U"`
@@ -237,11 +262,11 @@ func handleOrderBookUpdate(ob *internalOrderBook, updateMsg []byte) error {
 		)
 	}
 
-	err = UpdateOrders(&ob.Bids, update.BidUpdates)
+	err = UpdateOrders(&ob.Bids, update.BidUpdates, exConf)
 	if err != nil {
 		return err
 	}
-	err = UpdateOrders(&ob.Asks, update.AskUpdates)
+	err = UpdateOrders(&ob.Asks, update.AskUpdates, exConf)
 	if err != nil {
 		return err
 	}
@@ -287,17 +312,21 @@ func decodeTrade(msgData []byte) (exchangesdk.OrderBookTrade, error) {
 	}, nil
 }
 
-func pricesEqual(a, b exchangesdk.OrderBookOrder) bool {
+func pricesEqual(a, b exchangesdk.OrderBookOrder, pricePrecision float64) bool {
 
-	return math.Abs(a.Price-b.Price) < (MARKET_PRICE_PRECISION/float64(2))
+	return math.Abs(a.Price-b.Price) < (pricePrecision/float64(2))
 }
 
-func hasZeroVolume(o exchangesdk.OrderBookOrder) bool {
+func hasZeroVolume(o exchangesdk.OrderBookOrder, volPrecision float64) bool {
 
-	return math.Abs(o.Volume) < (MARKET_VOLUME_PRECISION/float64(2))
+	return math.Abs(o.Volume) < (volPrecision/float64(2))
 }
 
-func UpdateOrders(currentOrders *[]exchangesdk.OrderBookOrder, updates [][]string) error {
+func UpdateOrders(
+	currentOrders *[]exchangesdk.OrderBookOrder,
+	updates [][]string,
+	exConf ExchangeConfig,
+) error {
 
 	for _, update := range updates {
 
@@ -308,12 +337,12 @@ func UpdateOrders(currentOrders *[]exchangesdk.OrderBookOrder, updates [][]strin
 
 		foundOrder := false
 		for i := range *currentOrders {
-			if pricesEqual((*currentOrders)[i], orderUpdate) {
+			if pricesEqual((*currentOrders)[i], orderUpdate, exConf.PricePrecision) {
 				foundOrder = true
 
 				(*currentOrders)[i].Volume = orderUpdate.Volume
 
-				if hasZeroVolume((*currentOrders)[i]) {
+				if hasZeroVolume((*currentOrders)[i], exConf.VolPrecision) {
 					(*currentOrders)[i] = (*currentOrders)[len(*currentOrders)-1]
 					*currentOrders = (*currentOrders)[:len(*currentOrders)-1]
 				}
@@ -322,7 +351,7 @@ func UpdateOrders(currentOrders *[]exchangesdk.OrderBookOrder, updates [][]strin
 			}
 		}
 
-		if !foundOrder && !hasZeroVolume(orderUpdate) {
+		if !foundOrder && !hasZeroVolume(orderUpdate, exConf.VolPrecision) {
 			*currentOrders = append(*currentOrders, orderUpdate)
 		}
 	}
@@ -410,9 +439,9 @@ func sortOrders(orders *[]exchangesdk.OrderBookOrder, ordering sortOrdering) err
 	}
 }
 
-func newWebsocket() (*websocket.Conn, time.Time, error) {
+func newWebsocket(wsUrl string) (*websocket.Conn, time.Time, error) {
 
-	ws, _, err := websocket.DefaultDialer.Dial(wsUrl(), nil)
+	ws, _, err := websocket.DefaultDialer.Dial(wsUrl, nil)
 	if err != nil {
 		return nil, time.Time{}, err
 	}

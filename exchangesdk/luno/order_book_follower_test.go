@@ -158,7 +158,7 @@ func TestHandleUpdate(t *testing.T) {
 	for _, test := range testCases {
 		t.Run(test.Name, func(t *testing.T) {
 
-			_, err := luno.HandleUpdate(&test.OrderBook, test.Update)
+			_, err := luno.HandleUpdate(&test.OrderBook, test.Update, 1e-8)
 			require.NoError(t, err)
 
 			assert.Equal(t, test.ExpectedOrderBook, test.OrderBook)

@@ -14,30 +14,30 @@ import (
 func NewMarketFollower(
 	ctx context.Context,
 	wg *sync.WaitGroup,
-	pair exchangesdk.Pair,
+	exchange crypto.Exchange,
 	apiAuth crypto.AuthConfig,
 ) (<-chan exchangesdk.OrderBook, <-chan exchangesdk.OrderBookTrade, error) {
 
-	switch apiAuth.ApiExchange {
-	case crypto.ExchangeDummyExchange:
+	switch exchange.Provider {
+	case crypto.ApiProviderDummyExchange:
 		return dummyclient.NewMarketFollower(
 			ctx,
 			wg,
-			pair,
+			exchange.Pair,
 		)
-	case crypto.ExchangeLuno:
+	case crypto.ApiProviderLuno:
 		return luno.NewOrderBookFollowerAndTradeStream(
 			ctx,
 			wg,
-			pair,
-			apiAuth.ApiKey,
-			apiAuth.ApiSecret,
+			exchange.Pair,
+			apiAuth.Key,
+			apiAuth.Secret,
 		)
-	case crypto.ExchangeBinance:
+	case crypto.ApiProviderBinance:
 		return binance.NewMarketFollower(
 			ctx,
 			wg,
-			pair,
+			exchange.Pair,
 		)
 	default:
 		log.Fatal("NewMarketFollower: Unknown exchange")

@@ -60,16 +60,16 @@ func GetAuthConfigByName(
 
 func validateAuthFields(authName string, auth crypto.AuthConfig) error {
 
-	if auth.ApiExchange == crypto.ExchangeUnknown {
-		return fmt.Errorf("Auth[%s].Exchange is not a known exchange", authName)
+	if auth.Provider == crypto.ApiProviderUnknown {
+		return fmt.Errorf("Auth[%s].Provider is not a known api provider", authName)
 	}
 
-	if auth.ApiKey == "" {
-		return fmt.Errorf("Auth[%s].ApiKey is empty", authName)
+	if auth.Key == "" {
+		return fmt.Errorf("Auth[%s].Key is empty", authName)
 	}
 
-	if auth.ApiSecret == "" {
-		return fmt.Errorf("Auth[%s].ApiSecret is empty", authName)
+	if auth.Secret == "" {
+		return fmt.Errorf("Auth[%s].Secret is empty", authName)
 	}
 
 	return nil

@@ -38,7 +38,14 @@ func TestUpdateOrders(t *testing.T) {
 		},
 	}
 
-	binance.UpdateOrders(&currentOrders, updates)
+	binance.UpdateOrders(
+		&currentOrders,
+		updates,
+		binance.ExchangeConfig{
+			PricePrecision: 1e-2,
+			VolPrecision: 1e-8,
+		},
+	)
 
 	assert.LogicallyEqual(t, expectedOrders, currentOrders)
 }

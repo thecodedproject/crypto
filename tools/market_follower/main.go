@@ -142,7 +142,10 @@ func logStatsForever(
 	obf, tradeStream, err := factory.NewMarketFollower(
 		ctx,
 		wg,
-		exchangesdk.BTCEUR,
+		crypto.Exchange{
+			Provider: apiAuth.Provider,
+			Pair: crypto.PairBTCUSDT,
+		},
 		apiAuth,
 	)
 	if err != nil {
@@ -206,12 +209,12 @@ func main() {
 	case "binance":
 		// Binance doesnt require api creds
 		apiCreds = crypto.AuthConfig{
-			ApiExchange: crypto.ExchangeBinance,
+			Provider: crypto.ApiProviderBinance,
 		}
 	case "dummy":
 		// Dummy exchange doesnt require api creds
 		apiCreds = crypto.AuthConfig{
-			ApiExchange: crypto.ExchangeDummyExchange,
+			Provider: crypto.ApiProviderDummyExchange,
 		}
 	default:
 		log.Fatal("Unknown exchange:", flag.Arg(0))

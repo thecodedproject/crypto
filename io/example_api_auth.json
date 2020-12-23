@@ -1,14 +1,14 @@
 {
 	"keys": {
 		"dummy_creds": {
-			"exchange": "Luno",
-			"api_key": "key",
-			"api_secret": "secret"
+			"provider": "luno",
+			"key": "key",
+			"secret": "secret"
 		},
 		"dummy_creds_2": {
-			"exchange": "Binance",
-			"api_key": "key",
-			"api_secret": "secret"
+			"provider": "binance",
+			"key": "key",
+			"secret": "secret"
 		}
 	}
 }

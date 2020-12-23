@@ -2,6 +2,7 @@ package dummyclient
 
 import (
 	"context"
+	"github.com/thecodedproject/crypto"
 	"github.com/thecodedproject/crypto/exchangesdk"
 	"sync"
 	"time"
@@ -10,7 +11,7 @@ import (
 func NewMarketFollower(
 	ctx context.Context,
 	wg *sync.WaitGroup,
-	pair exchangesdk.Pair,
+	_ crypto.Pair,
 ) (<-chan exchangesdk.OrderBook, <-chan exchangesdk.OrderBookTrade, error) {
 
 	obf := make(chan exchangesdk.OrderBook, 1)
