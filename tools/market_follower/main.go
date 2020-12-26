@@ -78,18 +78,12 @@ func logStats(stats *Stats) {
 		log.Fatal(err)
 	}
 
-	bestBid, err := stats.BestBid.Mean(statsTime)
-	if err != nil {
-		log.Fatal(err)
-	}
+	bestBid := stats.BestBid.Latest()//Mean(statsTime)
 	bestBidGrad, err := stats.BestBid.Gradient(statsTime)
 	if err != nil {
 		log.Fatal(err)
 	}
-	bestAsk, err := stats.BestAsk.Mean(statsTime)
-	if err != nil {
-		log.Fatal(err)
-	}
+	bestAsk := stats.BestAsk.Latest()//Mean(statsTime)
 	bestAskGrad, err := stats.BestAsk.Gradient(statsTime)
 	if err != nil {
 		log.Fatal(err)
@@ -144,7 +138,7 @@ func logStatsForever(
 		wg,
 		crypto.Exchange{
 			Provider: apiAuth.Provider,
-			Pair: crypto.PairBTCUSDT,
+			Pair: crypto.PairBTCEUR,
 		},
 		apiAuth,
 	)

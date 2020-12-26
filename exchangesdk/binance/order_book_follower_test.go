@@ -27,11 +27,16 @@ func TestUpdateOrders(t *testing.T) {
 	}
 
 	updates := [][]string{
+		{"0.5", "1.2"},
 		{"1.0", "0"},
 		{"2.0", "2.1"},
 	}
 
 	expectedOrders := []exchangesdk.OrderBookOrder{
+		{
+			Price: 0.5,
+			Volume: 1.2,
+		},
 		{
 			Price: 2.0,
 			Volume: 2.1,

@@ -25,10 +25,11 @@ type Pair int
 const (
 	PairUnknown Pair = 0
 	PairBTCEUR Pair = 1
-	PairBTCUSDT Pair = 2
+	PairBTCGBP Pair = 2
+	PairBTCUSDT Pair = 3
 
-	PairLTCBTC Pair = 3
-	PairSentinal Pair = 4
+	PairLTCBTC Pair = 4
+	PairSentinal Pair = 5
 )
 
 type Exchange struct {

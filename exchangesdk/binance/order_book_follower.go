@@ -64,6 +64,14 @@ func getExchangeConfig(pair crypto.Pair) (ExchangeConfig, error) {
 			PricePrecision: 1e-2,
 			VolPrecision: 1e-8,
 		}, nil
+	case crypto.PairBTCGBP:
+		return ExchangeConfig{
+			OrderBookStream: "btcgbp@depth",
+			TradesStream: "btcgbp@trade",
+			PairCode: "BTCGBP",
+			PricePrecision: 1e-2,
+			VolPrecision: 1e-8,
+		}, nil
 	case crypto.PairBTCUSDT:
 		return ExchangeConfig{
 			OrderBookStream: "btcusdt@depth",
@@ -100,6 +108,15 @@ func followForever(
 	wsUrl := buildWsUrl(exConf)
 
 	go func() {
+
+		var err error
+		ws, wsAge, err = newWebsocket(wsUrl)
+		if err != nil {
+			log.Println("OrderBookFollower error:", err)
+			close(obf)
+			wg.Done()
+			return
+		}
 
 		ob, err := getLatestSnapshot(exConf.PairCode)
 		if err != nil {
@@ -253,12 +270,11 @@ func handleOrderBookUpdate(
 		return nil
 	}
 
-	if update.LastUpdateId < ob.lastUpdateId+1 &&
-			update.FirstUpdateId != ob.lastUpdateId+1 {
+	if update.FirstUpdateId > ob.lastUpdateId+1 {
 		return fmt.Errorf(
-			"out of order update; expected updateID %d, got %d",
-			ob.lastUpdateId+1,
+			"missed some updates; got update %d but last ob update is %d",
 			update.FirstUpdateId,
+			ob.lastUpdateId,
 		)
 	}
 
