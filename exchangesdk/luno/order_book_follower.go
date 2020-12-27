@@ -172,17 +172,6 @@ func followForever(
 				log.Fatal(err, ": ", string(msg))
 			}
 
-			obUpdated, err := HandleUpdate(&ob, update, exConf.MarketVolumePrecision)
-			if err != nil {
-				log.Println("OrderBookFollower error:", err)
-				close(obf)
-				wg.Done()
-				return
-			}
-			if obUpdated {
-				obf <- *toSortedOrderBook(&ob)
-			}
-
 			for _, tradeUpdate := range update.TradeUpdates {
 				t, err := convertToSdkTrade(&ob, tradeUpdate, update.Timestamp)
 				if err != nil {
@@ -192,6 +181,17 @@ func followForever(
 					return
 				}
 				tradeStream <- t
+			}
+
+			obUpdated, err := HandleUpdate(&ob, update, exConf.MarketVolumePrecision)
+			if err != nil {
+				log.Println("OrderBookFollower error:", err)
+				close(obf)
+				wg.Done()
+				return
+			}
+			if obUpdated {
+				obf <- *toSortedOrderBook(&ob)
 			}
 
 			select{
