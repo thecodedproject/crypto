@@ -315,7 +315,7 @@ func HandleTrade(ob *InternalOrderBook, t *TradeUpdate, volPrecision float64) er
 		return nil
 	}
 
-	return fmt.Errorf("received trade for unknown Order id `%s`", t.MakerOrderId)
+	return fmt.Errorf("received trade for unknown Order id `%+v`", t)
 }
 
 func updateOrdersWithTrade(
