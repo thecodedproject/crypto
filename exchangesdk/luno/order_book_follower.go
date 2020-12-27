@@ -3,7 +3,6 @@ package luno
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/gorilla/websocket"
 	"github.com/thecodedproject/crypto"
