@@ -120,8 +120,6 @@ func followForever(
 	apiSecret string,
 ) (<-chan exchangesdk.OrderBook, <-chan exchangesdk.OrderBookTrade, error) {
 
-	log.Println("Running obf")
-
 	obf := make(chan exchangesdk.OrderBook, 1)
 	tradeStream := make(chan exchangesdk.OrderBookTrade, 1)
 	var ob InternalOrderBook
@@ -390,7 +388,7 @@ func convertToSdkTrade(
 	} else if isAsk {
 		makerSide = exchangesdk.MarketSideBuy
 	} else {
-		return exchangesdk.OrderBookTrade{}, errors.New("received trade with unknown order id")
+		return exchangesdk.OrderBookTrade{}, fmt.Errorf("received trade with unknown trade side `%+v`", t)
 	}
 
 	return exchangesdk.OrderBookTrade{
