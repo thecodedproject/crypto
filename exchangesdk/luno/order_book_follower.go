@@ -344,7 +344,7 @@ func updateOrdersWithTrade(
 
 	o.Volume -= tradeVolume
 
-	if o.Volume < 0 {
+	if o.Volume < 0 && !hasZeroVolume(o, volPrecision) {
 		return false, fmt.Errorf(
 			"recieved trade which would make Order volume negative (%f)",
 			o.Volume,
@@ -353,6 +353,12 @@ func updateOrdersWithTrade(
 
 	if hasZeroVolume(o, volPrecision) {
 		delete(m, id)
+	} else if o.Volume < 0 {
+		return false, fmt.Errorf(
+			"recieved trade which would make Order volume negative (%f)",
+			o.Volume,
+		)
+
 	} else {
 		m[id] = o
 	}
