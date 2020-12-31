@@ -80,6 +80,30 @@ func getExchangeConfig(pair crypto.Pair) (ExchangeConfig, error) {
 			PricePrecision: 1e-2,
 			VolPrecision: 1e-8,
 		}, nil
+	case crypto.PairLTCBTC:
+		return ExchangeConfig{
+			OrderBookStream: "ltcbtc@depth",
+			TradesStream: "ltcbtc@trade",
+			PairCode: "LTCBTC",
+			PricePrecision: 1e-6,
+			VolPrecision: 1e-2,
+		}, nil
+	case crypto.PairETHBTC:
+		return ExchangeConfig{
+			OrderBookStream: "ethbtc@depth",
+			TradesStream: "ethbtc@trade",
+			PairCode: "ETHBTC",
+			PricePrecision: 1e-6,
+			VolPrecision: 1e-3,
+		}, nil
+	case crypto.PairBCHBTC:
+		return ExchangeConfig{
+			OrderBookStream: "bchbtc@depth",
+			TradesStream: "bchbtc@trade",
+			PairCode: "BCHBTC",
+			PricePrecision: 1e-6,
+			VolPrecision: 1e-3,
+		}, nil
 	default:
 		return ExchangeConfig{}, fmt.Errorf("%s pair is not support by Binance market follower", pair)
 	}

@@ -99,11 +99,26 @@ func getExchangeConfig(pair crypto.Pair) (exchangeConfig, error) {
 	case crypto.PairBTCEUR:
 		return exchangeConfig{
 			WsUrl: "wss://ws.luno.com/api/1/stream/XBTEUR",
-			MarketVolumePrecision: 1e-8,
+			MarketVolumePrecision: 1e-4,
+		}, nil
+	case crypto.PairBTCGBP:
+		return exchangeConfig{
+			WsUrl: "wss://ws.luno.com/api/1/stream/XBTGBP",
+			MarketVolumePrecision: 1e-4,
 		}, nil
 	case crypto.PairLTCBTC:
 		return exchangeConfig{
 			WsUrl: "wss://ws.luno.com/api/1/stream/LTCXBT",
+			MarketVolumePrecision: 1e-2,
+		}, nil
+	case crypto.PairETHBTC:
+		return exchangeConfig{
+			WsUrl: "wss://ws.luno.com/api/1/stream/ETHXBT",
+			MarketVolumePrecision: 1e-2,
+		}, nil
+	case crypto.PairBCHBTC:
+		return exchangeConfig{
+			WsUrl: "wss://ws.luno.com/api/1/stream/BCHXBT",
 			MarketVolumePrecision: 1e-2,
 		}, nil
 	default:

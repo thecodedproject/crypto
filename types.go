@@ -29,7 +29,9 @@ const (
 	PairBTCUSDT Pair = 3
 
 	PairLTCBTC Pair = 4
-	PairSentinal Pair = 5
+	PairETHBTC Pair = 5
+	PairBCHBTC Pair = 6
+	PairSentinal Pair = 7
 )
 
 type Exchange struct {

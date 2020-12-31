@@ -8,9 +8,9 @@ import (
 	"fmt"
 )
 
-const _PairName = "unknownbtceurbtcgbpbtcusdtltcbtcsentinal"
+const _PairName = "unknownbtceurbtcgbpbtcusdtltcbtcethbtcbchbtcsentinal"
 
-var _PairIndex = [...]uint8{0, 7, 13, 19, 26, 32, 40}
+var _PairIndex = [...]uint8{0, 7, 13, 19, 26, 32, 38, 44, 52}
 
 func (i Pair) String() string {
 	if i < 0 || i >= Pair(len(_PairIndex)-1) {
@@ -19,7 +19,7 @@ func (i Pair) String() string {
 	return _PairName[_PairIndex[i]:_PairIndex[i+1]]
 }
 
-var _PairValues = []Pair{0, 1, 2, 3, 4, 5}
+var _PairValues = []Pair{0, 1, 2, 3, 4, 5, 6, 7}
 
 var _PairNameToValueMap = map[string]Pair{
 	_PairName[0:7]:   0,
@@ -27,7 +27,9 @@ var _PairNameToValueMap = map[string]Pair{
 	_PairName[13:19]: 2,
 	_PairName[19:26]: 3,
 	_PairName[26:32]: 4,
-	_PairName[32:40]: 5,
+	_PairName[32:38]: 5,
+	_PairName[38:44]: 6,
+	_PairName[44:52]: 7,
 }
 
 // PairString retrieves an enum value from the enum constants string name.
