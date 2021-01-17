@@ -128,7 +128,9 @@ func followForever(
 	obf := make(chan exchangesdk.OrderBook, 1)
 	tradeStream := make(chan exchangesdk.OrderBookTrade, 1)
 	var ws *websocket.Conn
+	var nextWs *websocket.Conn
 	wsAge := time.Time{}
+	nextWsAge := time.Time{}
 	wsUrl := buildWsUrl(exConf)
 
 	go func() {
@@ -141,6 +143,7 @@ func followForever(
 			wg.Done()
 			return
 		}
+		defer ws.Close()
 
 		ob, err := getLatestSnapshot(exConf.PairCode)
 		if err != nil {
@@ -151,18 +154,14 @@ func followForever(
 		}
 
 		for {
-			if wsAge.Before(time.Now().Add(-WEBSOCKET_LIFETIME)) {
-				if ws != nil {
-					ws.Close()
-				}
-				ws, wsAge, err = newWebsocket(wsUrl)
+			if nextWs == nil && time.Since(wsAge) > WEBSOCKET_LIFETIME {
+				nextWs, nextWsAge, err = newWebsocket(wsUrl)
 				if err != nil {
 					log.Println("OrderBookFollower error:", err)
 					close(obf)
 					wg.Done()
 					return
 				}
-				defer ws.Close()
 			}
 
 			_, msg, err := ws.ReadMessage()
@@ -206,6 +205,13 @@ func followForever(
 					return
 				}
 				tradeStream <- trade
+			}
+
+			if nextWs != nil && time.Since(nextWsAge) > time.Second{
+				ws.Close()
+				ws = nextWs
+				nextWs = nil
+				wsAge = nextWsAge
 			}
 
 			select{
