@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/thecodedproject/crypto"
 	"github.com/thecodedproject/crypto/exchangesdk"
 	"github.com/thecodedproject/crypto/exchangesdk/luno"
 	"github.com/thecodedproject/crypto/io"
@@ -56,7 +57,9 @@ func main() {
 	ctx := context.Background()
 	c, err := luno.NewClient(
 		auth.Key,
-		auth.Secret)
+		auth.Secret,
+		crypto.PairBTCEUR,
+	)
 	if err != nil {
 		log.Fatal(err)
 	}

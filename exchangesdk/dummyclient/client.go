@@ -4,6 +4,7 @@ import (
 	"context"
 	"math/rand"
 	"github.com/shopspring/decimal"
+	"github.com/thecodedproject/crypto"
 	"github.com/thecodedproject/crypto/exchangesdk"
 )
 
@@ -21,7 +22,11 @@ type client struct {
 	lastOrderVolume decimal.Decimal
 }
 
-func NewClient(apiKey, apiSecret string) (*client, error) {
+func NewClient(
+	apiKey string,
+	apiSecret string,
+	pair crypto.Pair,
+) (*client, error) {
 
 	return &client{}, nil
 }
@@ -37,7 +42,7 @@ func (c *client) PostLimitOrder(ctx context.Context, order exchangesdk.Order) (s
 	return "some_order_id", nil
 }
 
-func (c *client) StopOrder(ctx context.Context, orderId string) error {
+func (c *client) CancelOrder(ctx context.Context, orderId string) error {
 
 	return nil
 }

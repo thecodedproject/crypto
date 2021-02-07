@@ -3,7 +3,9 @@ package binance
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/shopspring/decimal"
+	"github.com/thecodedproject/crypto"
 	"github.com/thecodedproject/crypto/exchangesdk"
 	"github.com/thecodedproject/crypto/exchangesdk/requestutil"
 	utiltime "github.com/thecodedproject/crypto/util/time"
@@ -18,12 +20,6 @@ import (
 	"encoding/hex"
 )
 
-type marketPair string
-
-const (
-	BTCEUR marketPair = "BTCEUR"
-)
-
 const (
 	baseUrl = "https://api.binance.com"
 )
@@ -33,14 +29,27 @@ type client struct {
 	apiKey string
 	apiSecret string
 	httpClient *http.Client
+	tradingPair string
 }
 
-func NewClient(apiKey, apiSecret string) (*client, error) {
+var _ exchangesdk.Client =  (*client)(nil)
+
+func NewClient(
+	apiKey string,
+	apiSecret string,
+	pair crypto.Pair,
+) (*client, error) {
+
+	tradingPair, err := getBinanceTradingPair(pair)
+	if err != nil {
+		return nil, err
+	}
 
 	return &client{
 		apiKey: apiKey,
 		apiSecret: apiSecret,
 		httpClient: http.DefaultClient,
+		tradingPair: tradingPair,
 	}, nil
 }
 
@@ -49,6 +58,7 @@ func NewClientForTesting(
 	t *testing.T,
 	apiKey string,
 	apiSecret string,
+	tradingPair string,
 	handler func(req *http.Request) *http.Response,
 ) *client {
 
@@ -58,19 +68,35 @@ func NewClientForTesting(
 		httpClient: &http.Client{
 			Transport: requestutil.RoundTripFunc(handler),
 		},
+		tradingPair: tradingPair,
+	}
+}
+
+func getBinanceTradingPair(pair crypto.Pair) (string, error) {
+
+	switch pair {
+	case crypto.PairBTCEUR:
+		return "BTCEUR", nil
+	case crypto.PairBTCGBP:
+		return "BTCGBP", nil
+	case crypto.PairBTCUSDT:
+		return "BTCUSDT", nil
+	case crypto.PairLTCBTC:
+		return "LTCBTC", nil
+	case crypto.PairETHBTC:
+		return "ETHBTC", nil
+	case crypto.PairBCHBTC:
+		return "BCHBTC", nil
+	default:
+		return "", fmt.Errorf("Pair %s is not supported by exchagnesdk.Luno", pair)
 	}
 }
 
 func (c *client) LatestPrice(ctx context.Context) (decimal.Decimal, error) {
 
-	return c.LatestPriceForPair(ctx, BTCEUR)
-}
-
-func (c *client) LatestPriceForPair(ctx context.Context, pair marketPair) (decimal.Decimal, error) {
-
 	path := requestutil.FullPath(baseUrl, "/api/v3/ticker/price")
 	values := url.Values{}
-	values.Add("symbol", string(pair))
+	values.Add("symbol", c.tradingPair)
 	path.RawQuery = values.Encode()
 
 	body, err := GetBody(c.httpClient.Get(path.String()))
@@ -90,14 +116,8 @@ func (c *client) LatestPriceForPair(ctx context.Context, pair marketPair) (decim
 	return latestPrice.Price, nil
 }
 
-func (c *client) PostLimitOrder(ctx context.Context, order exchangesdk.Order) (string, error) {
-
-	return c.PostLimitOrderForPair(ctx, BTCEUR, order)
-}
-
-func (c *client) PostLimitOrderForPair(
+func (c *client) PostLimitOrder(
 	ctx context.Context,
-	pair marketPair,
 	order exchangesdk.Order,
 ) (string, error) {
 
@@ -118,7 +138,7 @@ func (c *client) PostLimitOrderForPair(
 		c.httpClient,
 		c.apiKey,
 		c.apiSecret,
-		pair,
+		c.tradingPair,
 		values,
 	)
 	if err != nil {
@@ -137,16 +157,7 @@ func (c *client) PostLimitOrderForPair(
 	return res.Id, nil
 }
 
-func (c *client) StopOrder(ctx context.Context, orderId string) error {
-
-	return c.StopOrderForPair(ctx, BTCEUR, orderId)
-}
-
-func (c *client) StopOrderForPair(
-	ctx context.Context,
-	pair marketPair,
-	orderId string,
-) error {
+func (c *client) CancelOrder(ctx context.Context, orderId string) error {
 
 	values := url.Values{}
 	values.Add("origClientOrderId", orderId)
@@ -156,7 +167,7 @@ func (c *client) StopOrderForPair(
 		c.httpClient,
 		c.apiKey,
 		c.apiSecret,
-		pair,
+		c.tradingPair,
 		values,
 	)
 	return err
@@ -164,15 +175,6 @@ func (c *client) StopOrderForPair(
 
 func (c *client) GetOrderStatus(
 	ctx context.Context,
-	orderId string,
-) (exchangesdk.OrderStatus, error) {
-
-	return c.GetOrderStatusForPair(ctx, BTCEUR, orderId)
-}
-
-func (c *client) GetOrderStatusForPair(
-	ctx context.Context,
-	pair marketPair,
 	orderId string,
 ) (exchangesdk.OrderStatus, error) {
 
@@ -184,7 +186,7 @@ func (c *client) GetOrderStatusForPair(
 		c.httpClient,
 		c.apiKey,
 		c.apiSecret,
-		pair,
+		c.tradingPair,
 		values,
 	)
 	if err != nil {
@@ -244,7 +246,7 @@ func requestToOrderEndpointWithAuth(
 	httpClient *http.Client,
 	apiKey string,
 	apiSecret string,
-	pair marketPair,
+	pair string,
 	values url.Values,
 ) ([]byte, error) {
 
@@ -253,7 +255,7 @@ func requestToOrderEndpointWithAuth(
 	nowMs := utiltime.Now().Round(time.Millisecond).UnixNano() / 1e6
 	timestampStr := strconv.FormatInt(nowMs, 10)
 	values.Add("timestamp", timestampStr)
-	values.Add("symbol", string(pair))
+	values.Add("symbol", pair)
 
 	path.RawQuery = values.Encode()
 

@@ -56,7 +56,10 @@ type Client interface {
 	GetTrades(ctx context.Context, page int64) ([]Trade, error)
 
 	PostLimitOrder(ctx context.Context, order Order) (string, error)
-	StopOrder(ctx context.Context, orderId string) error
+
+	//PostStopLimitOrder(ctx context
+
+	CancelOrder(ctx context.Context, orderId string) error
 
 	// MakerFee returns the fee as a ratio (i.e. 1% returned as 0.01)
 	MakerFee() decimal.Decimal

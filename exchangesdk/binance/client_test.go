@@ -27,10 +27,10 @@ func timeAsMsStr(t time.Time) string {
 
 func TestLatestPriceWhenBinanceReturns200(t *testing.T) {
 
-	pair := binance.BTCEUR
+	pair := "BTCEUR"
 
 	handlerCalled := false
-	c := binance.NewClientForTesting(t, "k", "s", func(req *http.Request) *http.Response {
+	c := binance.NewClientForTesting(t, "k", "s", pair, func(req *http.Request) *http.Response {
 
 		handlerCalled = true
 		assert.Equal(
@@ -57,12 +57,12 @@ func TestLatestPriceWhenBinanceReturns200(t *testing.T) {
 
 func TestLatestPriceWhenBinanceReturns400WithError(t *testing.T) {
 
-	pair := binance.BTCEUR
+	pair := "BTCEUR"
 
 	errorMsg := "some error"
 
 	handlerCalled := false
-	c := binance.NewClientForTesting(t, "k", "s", func(req *http.Request) *http.Response {
+	c := binance.NewClientForTesting(t, "k", "s", pair, func(req *http.Request) *http.Response {
 
 		handlerCalled = true
 		assert.Equal(
@@ -89,7 +89,7 @@ func TestLatestPriceWhenBinanceReturns400WithError(t *testing.T) {
 
 func TestSuccessfulPostBuyLimitOrder(t *testing.T) {
 
-	pair := binance.BTCEUR
+	pair := "BTCEUR"
 	order := exchangesdk.Order{
 		Type: exchangesdk.OrderTypeBid,
 		Price: decimal.New(1234, -1),
@@ -102,7 +102,7 @@ func TestSuccessfulPostBuyLimitOrder(t *testing.T) {
 	defer reset()
 
 	handlerCalled := false
-	c := binance.NewClientForTesting(t, "k", "s", func(req *http.Request) *http.Response {
+	c := binance.NewClientForTesting(t, "k", "s", pair, func(req *http.Request) *http.Response {
 
 		handlerCalled = true
 		assert.Contains(
@@ -144,7 +144,7 @@ func TestSuccessfulPostBuyLimitOrder(t *testing.T) {
 
 func TestSuccessfulPostSellLimitOrder(t *testing.T) {
 
-	pair := binance.BTCEUR
+	pair := "BTCEUR"
 	order := exchangesdk.Order{
 		Type: exchangesdk.OrderTypeAsk,
 		Price: decimal.New(1232, -1),
@@ -157,7 +157,7 @@ func TestSuccessfulPostSellLimitOrder(t *testing.T) {
 	defer reset()
 
 	handlerCalled := false
-	c := binance.NewClientForTesting(t, "k", "s", func(req *http.Request) *http.Response {
+	c := binance.NewClientForTesting(t, "k", "s", pair, func(req *http.Request) *http.Response {
 
 		handlerCalled = true
 		assert.Contains(
@@ -199,7 +199,7 @@ func TestSuccessfulPostSellLimitOrder(t *testing.T) {
 
 func TestSuccessfulPostSellLimitOrderWhichReturns4XX(t *testing.T) {
 
-	pair := binance.BTCEUR
+	pair := "BTCEUR"
 	order := exchangesdk.Order{
 		Type: exchangesdk.OrderTypeAsk,
 		Price: decimal.New(1232, -1),
@@ -213,7 +213,7 @@ func TestSuccessfulPostSellLimitOrderWhichReturns4XX(t *testing.T) {
 	defer reset()
 
 	handlerCalled := false
-	c := binance.NewClientForTesting(t, "k", "s", func(req *http.Request) *http.Response {
+	c := binance.NewClientForTesting(t, "k", "s", pair, func(req *http.Request) *http.Response {
 
 		handlerCalled = true
 		assert.Contains(
@@ -255,9 +255,9 @@ func TestSuccessfulPostSellLimitOrderWhichReturns4XX(t *testing.T) {
 	assert.True(t, handlerCalled)
 }
 
-func TestSuccessfulStopLimitOrder(t *testing.T) {
+func TestSuccessfulCancelLimitOrder(t *testing.T) {
 
-	pair := binance.BTCEUR
+	pair := "BTCEUR"
 	orderId := "12346"
 
 	nowTime := time.Unix(13876, 0)
@@ -265,7 +265,7 @@ func TestSuccessfulStopLimitOrder(t *testing.T) {
 	defer reset()
 
 	handlerCalled := false
-	c := binance.NewClientForTesting(t, "k", "s", func(req *http.Request) *http.Response {
+	c := binance.NewClientForTesting(t, "k", "s", pair, func(req *http.Request) *http.Response {
 
 		handlerCalled = true
 		assert.Contains(
@@ -298,14 +298,14 @@ func TestSuccessfulStopLimitOrder(t *testing.T) {
 		}
 	})
 
-	err := c.StopOrder(context.Background(), orderId)
+	err := c.CancelOrder(context.Background(), orderId)
 	require.NoError(t, err)
 	assert.True(t, handlerCalled)
 }
 
-func TestUnsuccessfulStopLimitOrder(t *testing.T) {
+func TestUnsuccessfulCancelLimitOrder(t *testing.T) {
 
-	pair := binance.BTCEUR
+	pair := "BTCEUR"
 	orderId := "12346"
 
 	nowTime := time.Unix(13876, 0)
@@ -314,7 +314,7 @@ func TestUnsuccessfulStopLimitOrder(t *testing.T) {
 
 	errorMsg := "some error message"
 	handlerCalled := false
-	c := binance.NewClientForTesting(t, "k", "s", func(req *http.Request) *http.Response {
+	c := binance.NewClientForTesting(t, "k", "s", pair, func(req *http.Request) *http.Response {
 
 		handlerCalled = true
 		assert.Contains(
@@ -347,7 +347,7 @@ func TestUnsuccessfulStopLimitOrder(t *testing.T) {
 		}
 	})
 
-	err := c.StopOrder(context.Background(), orderId)
+	err := c.CancelOrder(context.Background(), orderId)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), errorMsg)
 	assert.True(t, handlerCalled)
@@ -419,7 +419,7 @@ func TestSuccessfulGetOrderStatus(t *testing.T) {
 	for _, test := range testCases {
 		t.Run(test.name, func(t *testing.T) {
 
-			pair := binance.BTCEUR
+			pair := "BTCEUR"
 			orderId := "sda12346"
 
 			nowTime := time.Unix(13876, 0)
@@ -427,7 +427,7 @@ func TestSuccessfulGetOrderStatus(t *testing.T) {
 			defer reset()
 
 			handlerCalled := false
-			c := binance.NewClientForTesting(t, "k", "s", func(req *http.Request) *http.Response {
+			c := binance.NewClientForTesting(t, "k", "s", pair, func(req *http.Request) *http.Response {
 
 				handlerCalled = true
 				assert.Contains(

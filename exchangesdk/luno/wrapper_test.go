@@ -49,7 +49,7 @@ func TestGetTradesWhenThereAreNoTrades(t *testing.T) {
 	m := new(luno.MockLunoSdk)
 
 	req := &luno_sdk.ListUserTradesRequest{
-		Pair: luno.TRADINGPAIR,
+		Pair: "TestPair",
 	}
 	var res luno_sdk.ListUserTradesResponse
 	m.On("ListUserTrades", mock.Anything, req).Return(&res, nil)
@@ -67,7 +67,7 @@ func TestGetTradesFirstPageWhenThereAreSomeTrades(t *testing.T) {
 	m := new(luno.MockLunoSdk)
 
 	req := &luno_sdk.ListUserTradesRequest{
-		Pair: luno.TRADINGPAIR,
+		Pair: "TestPair",
 	}
 	res := luno_sdk.ListUserTradesResponse{
 		Trades: []luno_sdk.Trade{
@@ -105,7 +105,7 @@ func TestGetTradesFirstPageMultipleTimesWhenFullOfTradesMultipleTimesOnlyCallsLi
 	m := new(luno.MockLunoSdk)
 
 	req := &luno_sdk.ListUserTradesRequest{
-		Pair: luno.TRADINGPAIR,
+		Pair: "TestPair",
 	}
 	res := luno_sdk.ListUserTradesResponse{
 		Trades: makeSomeLunoTrades(100, 0),
@@ -130,7 +130,7 @@ func TestGetTradesSecondPageWhenFirstPageIsFull(t *testing.T) {
 	m := new(luno.MockLunoSdk)
 
 	firstReq := luno_sdk.ListUserTradesRequest{
-		Pair: luno.TRADINGPAIR,
+		Pair: "TestPair",
 	}
 	firstRes := luno_sdk.ListUserTradesResponse{
 		Trades: makeSomeLunoTrades(100, 0),
@@ -138,7 +138,7 @@ func TestGetTradesSecondPageWhenFirstPageIsFull(t *testing.T) {
 	m.On("ListUserTrades", mock.Anything, &firstReq).Return(&firstRes, nil)
 
 	secondReq := luno_sdk.ListUserTradesRequest{
-		Pair: luno.TRADINGPAIR,
+		Pair: "TestPair",
 		AfterSeq: 99,
 	}
 	secondRes := luno_sdk.ListUserTradesResponse{
@@ -170,7 +170,7 @@ func TestRepeatedlyGetTradesForSecondPageWhenFirstPageIsFullRequestsFirstPageOnc
 	m := new(luno.MockLunoSdk)
 
 	firstReq := luno_sdk.ListUserTradesRequest{
-		Pair: luno.TRADINGPAIR,
+		Pair: "TestPair",
 	}
 	firstRes := luno_sdk.ListUserTradesResponse{
 		Trades: makeSomeLunoTrades(100, 0),
@@ -178,7 +178,7 @@ func TestRepeatedlyGetTradesForSecondPageWhenFirstPageIsFullRequestsFirstPageOnc
 	m.On("ListUserTrades", mock.Anything, &firstReq).Return(&firstRes, nil).Once()
 
 	secondReq := luno_sdk.ListUserTradesRequest{
-		Pair: luno.TRADINGPAIR,
+		Pair: "TestPair",
 		AfterSeq: 99,
 	}
 	secondRes := luno_sdk.ListUserTradesResponse{
@@ -218,7 +218,7 @@ func TestRepeatedlyGetTradesForThridPageWhenSecondANdFirstPageIsFullRequestsThos
 	m := new(luno.MockLunoSdk)
 
 	firstReq := luno_sdk.ListUserTradesRequest{
-		Pair: luno.TRADINGPAIR,
+		Pair: "TestPair",
 	}
 	firstRes := luno_sdk.ListUserTradesResponse{
 		Trades: makeSomeLunoTrades(100, 0),
@@ -226,7 +226,7 @@ func TestRepeatedlyGetTradesForThridPageWhenSecondANdFirstPageIsFullRequestsThos
 	m.On("ListUserTrades", mock.Anything, &firstReq).Return(&firstRes, nil).Once()
 
 	secondReq := luno_sdk.ListUserTradesRequest{
-		Pair: luno.TRADINGPAIR,
+		Pair: "TestPair",
 		AfterSeq: 99,
 	}
 	secondRes := luno_sdk.ListUserTradesResponse{
@@ -235,7 +235,7 @@ func TestRepeatedlyGetTradesForThridPageWhenSecondANdFirstPageIsFullRequestsThos
 	m.On("ListUserTrades", mock.Anything, &secondReq).Return(&secondRes, nil).Once()
 
 	thirdReq := luno_sdk.ListUserTradesRequest{
-		Pair: luno.TRADINGPAIR,
+		Pair: "TestPair",
 		AfterSeq: 199,
 	}
 	thirdRes := luno_sdk.ListUserTradesResponse{
@@ -275,7 +275,7 @@ func TestGetTradesThirdPageWhenSecondPageIsNotFullReturnsEmpty(t *testing.T) {
 	m := new(luno.MockLunoSdk)
 
 	firstReq := luno_sdk.ListUserTradesRequest{
-		Pair: luno.TRADINGPAIR,
+		Pair: "TestPair",
 	}
 	firstRes := luno_sdk.ListUserTradesResponse{
 		Trades: makeSomeLunoTrades(100, 0),
@@ -283,7 +283,7 @@ func TestGetTradesThirdPageWhenSecondPageIsNotFullReturnsEmpty(t *testing.T) {
 	m.On("ListUserTrades", mock.Anything, &firstReq).Return(&firstRes, nil).Once()
 
 	secondReq := luno_sdk.ListUserTradesRequest{
-		Pair: luno.TRADINGPAIR,
+		Pair: "TestPair",
 		AfterSeq: 99,
 	}
 	secondRes := luno_sdk.ListUserTradesResponse{
@@ -310,7 +310,7 @@ func TestGetTradesForHundredthPageWhenOnlyFirstPageHasTradesOnlyRequestsFirstPag
 	m := new(luno.MockLunoSdk)
 
 	req := &luno_sdk.ListUserTradesRequest{
-		Pair: luno.TRADINGPAIR,
+		Pair: "TestPair",
 	}
 	res := luno_sdk.ListUserTradesResponse{
 		Trades: []luno_sdk.Trade{

@@ -2,6 +2,7 @@ package factory
 
 import (
 	"fmt"
+	"github.com/thecodedproject/crypto"
 	"github.com/thecodedproject/crypto/exchangesdk"
 	"github.com/thecodedproject/crypto/exchangesdk/binance"
 	"github.com/thecodedproject/crypto/exchangesdk/dummyclient"
@@ -9,29 +10,32 @@ import (
 )
 
 func NewClient(
-	exchangeName string,
+	exchange crypto.Exchange,
 	apiKey string,
 	apiSecret string,
 ) (exchangesdk.Client, error) {
 
-	switch exchangeName {
-	case "luno":
+	switch exchange.Provider {
+	case crypto.ApiProviderLuno:
 		return luno.NewClient(
 			apiKey,
 			apiSecret,
+			exchange.Pair,
 		)
-	case "binance":
+	case crypto.ApiProviderBinance:
 		return binance.NewClient(
 			apiKey,
 			apiSecret,
+			exchange.Pair,
 		)
-	case "dummyclient":
+	case crypto.ApiProviderDummyExchange:
 		return dummyclient.NewClient(
 				apiKey,
 				apiSecret,
+				exchange.Pair,
 			)
 	default:
-		return nil, fmt.Errorf("Cannot create client; Unknown exchange %s", exchangeName)
+		return nil, fmt.Errorf("Cannot create client; Unknown Api provider %s", exchange.Provider)
 	}
 
 }

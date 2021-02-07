@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/shopspring/decimal"
+	"github.com/thecodedproject/crypto"
 	"github.com/thecodedproject/crypto/exchangesdk"
 	"github.com/thecodedproject/crypto/util"
 	"testing"
@@ -13,10 +14,8 @@ import (
 	lunodecimal "github.com/luno/luno-go/decimal"
 )
 
-const (
-  TRADINGPAIR = "XBTEUR"
-)
-
+// LunoSdk is the interface presented by the Luno Go SDK.
+// It is defined here as a way of mocking the Luno Go SDK.
 type LunoSdk interface {
 	GetTicker(ctx context.Context, req *luno_sdk.GetTickerRequest) (*luno_sdk.GetTickerResponse, error)
 	PostLimitOrder(ctx context.Context, req *luno_sdk.PostLimitOrderRequest) (*luno_sdk.PostLimitOrderResponse, error)
@@ -32,15 +31,27 @@ type tradesAndLastSeq struct {
 
 type client struct {
   lunoSdk LunoSdk
+	tradingPair string
 	tradesByPage map[int64]tradesAndLastSeq
 }
 
-func NewClient(id, secret string) (*client, error) {
+func NewClient(
+	id string,
+	secret string,
+	pair crypto.Pair,
+) (*client, error) {
+
+	tradingPair, err := getLunoTradingPair(pair)
+	if err != nil {
+		return nil, err
+	}
+
   c := luno_sdk.NewClient()
   c.SetAuth(id, secret)
 
   return &client{
     lunoSdk: c,
+		tradingPair: tradingPair,
 		tradesByPage: make(map[int64]tradesAndLastSeq),
   }, nil
 }
@@ -49,13 +60,32 @@ func NewClientForTesting(_ *testing.T, lunoSdk LunoSdk) *client {
 
 	return &client{
 		lunoSdk: lunoSdk,
+		tradingPair: "TestPair",
 		tradesByPage: make(map[int64]tradesAndLastSeq),
+	}
+}
+
+func getLunoTradingPair(pair crypto.Pair) (string, error) {
+
+	switch pair {
+	case crypto.PairBTCEUR:
+		return "XBTEUR", nil
+	case crypto.PairBTCGBP:
+		return "XBTGBP", nil
+	case crypto.PairLTCBTC:
+		return "LTCBTC", nil
+	case crypto.PairETHBTC:
+		return "ETHBTC", nil
+	case crypto.PairBCHBTC:
+		return "BCHBTC", nil
+	default:
+		return "", fmt.Errorf("Pair %s is not supported by exchagnesdk.Luno", pair)
 	}
 }
 
 func (l *client) LatestPrice(ctx context.Context) (decimal.Decimal, error) {
 
-  req := luno_sdk.GetTickerRequest{Pair: TRADINGPAIR}
+  req := luno_sdk.GetTickerRequest{Pair: l.tradingPair}
   res, err := l.lunoSdk.GetTicker(ctx, &req)
   if err != nil {
     return decimal.Decimal{}, err
@@ -81,7 +111,7 @@ func (l *client) PostLimitOrder(ctx context.Context, order exchangesdk.Order) (s
 	}
 
   req := luno_sdk.PostLimitOrderRequest{
-    Pair: TRADINGPAIR,
+    Pair: l.tradingPair,
     Price: lunoPrice,
     Volume: lunoVolume,
     Type: luno_sdk.OrderType(order.Type),
@@ -96,8 +126,7 @@ func (l *client) PostLimitOrder(ctx context.Context, order exchangesdk.Order) (s
   return res.OrderId, nil
 }
 
-// TODO StopOrder used to return (bool, error) (returing false if stop order failed... it was refactored away to get things running quicker... decide if that was a better interface
-func (l *client) StopOrder(ctx context.Context, orderId string) error {
+func (l *client) CancelOrder(ctx context.Context, orderId string) error {
 
   req := luno_sdk.StopOrderRequest{
     OrderId: orderId,
@@ -166,7 +195,7 @@ func (l* client) GetTrades(ctx context.Context, page int64) ([]exchangesdk.Trade
 	}
 
 	req := luno_sdk.ListUserTradesRequest{
-		Pair: TRADINGPAIR,
+		Pair: l.tradingPair,
 	}
 
 	if page > 1 {
