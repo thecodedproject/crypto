@@ -11,6 +11,7 @@ type MovingStats interface {
 
 	Latest() float64
 	Mean(since time.Time) (float64, error)
+	MeanLatestOrNan(l time.Duration) float64
 	Sum(since time.Time) (float64, error)
 	Max(since time.Time) (float64, error)
 	Min(since time.Time) (float64, error)
