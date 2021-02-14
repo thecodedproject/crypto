@@ -48,7 +48,7 @@ func updateStatsWithOrderBook(stats *Stats, ob *exchangesdk.OrderBook) {
 func updateStatsWithTrade(stats *Stats, trade *exchangesdk.OrderBookTrade) {
 
 	weight := trade.Volume
-	if trade.MakerSide == exchangesdk.MarketSideBuy {
+	if trade.MakerSide == exchangesdk.OrderBookSideBid {
 		weight = -weight
 	}
 

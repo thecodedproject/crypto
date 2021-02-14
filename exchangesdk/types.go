@@ -2,7 +2,11 @@ package exchangesdk
 
 import(
 	"time"
+
+	"github.com/shopspring/decimal"
 )
+
+//go:generate enumer -type=OrderBookSide -trimprefix=OrderBookSide -json -text -transform=snake
 
 type OrderBook struct {
 
@@ -18,32 +22,26 @@ type OrderBookOrder struct {
 	Volume float64 `json:"volume,string"`
 }
 
-type MarketSide int
+type OrderBookSide int
 
 const (
-	MarketSideUnknown MarketSide = iota
-	MarketSideBuy
-	MarketSideSell
-	tradeSideSentinal
+	OrderBookSideUnknown OrderBookSide = iota
+	OrderBookSideBid
+	OrderBookSideAsk
+	OrderBookSideSentinal
 )
-
-func (s MarketSide) String() string {
-
-	switch s {
-	case MarketSideBuy:
-		return "MarketSideBuy"
-	case MarketSideSell:
-		return "MarketSideSell"
-	default:
-		return "MarketSideUnknown"
-	}
-}
 
 // OrderBookTrade represents a trade as seen in the OrderBook
 type OrderBookTrade struct {
-	MakerSide MarketSide
+	MakerSide OrderBookSide
 	Price float64
 	Volume float64
 	Timestamp time.Time
 }
 
+type StopLimitOrder struct {
+	Side OrderBookSide
+	StopPrice decimal.Decimal
+	LimitPrice decimal.Decimal
+	Volume decimal.Decimal
+}

@@ -397,16 +397,16 @@ func convertToSdkTrade(
 	timestamp int64,
 ) (exchangesdk.OrderBookTrade, error) {
 
-	var makerSide exchangesdk.MarketSide
+	var makerSide exchangesdk.OrderBookSide
 
 	var isBid bool
 	var isAsk bool
 	_, isBid = ob.Bids[t.MakerOrderId]
 	_, isAsk = ob.Asks[t.MakerOrderId]
 	if isBid {
-		makerSide = exchangesdk.MarketSideBuy
+		makerSide = exchangesdk.OrderBookSideBid
 	} else if isAsk {
-		makerSide = exchangesdk.MarketSideBuy
+		makerSide = exchangesdk.OrderBookSideAsk
 	} else {
 		return exchangesdk.OrderBookTrade{}, fmt.Errorf("received trade with unknown trade side `%+v`", t)
 	}

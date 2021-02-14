@@ -345,9 +345,9 @@ func decodeTrade(msgData []byte) (exchangesdk.OrderBookTrade, error) {
 		return exchangesdk.OrderBookTrade{}, err
 	}
 
-	makerSide := exchangesdk.MarketSideSell
+	makerSide := exchangesdk.OrderBookSideAsk
 	if tradeJson.BuyerIsMaker {
-		makerSide = exchangesdk.MarketSideBuy
+		makerSide = exchangesdk.OrderBookSideBid
 	}
 
 	return exchangesdk.OrderBookTrade{

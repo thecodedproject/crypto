@@ -126,6 +126,49 @@ func (l *client) PostLimitOrder(ctx context.Context, order exchangesdk.Order) (s
   return res.OrderId, nil
 }
 
+func (l *client) PostStopLimitOrder(
+	ctx context.Context,
+	order exchangesdk.StopLimitOrder,
+) (string, error) {
+
+	lunoStopPrice, err := lunoFromShopSpringDecimal(order.StopPrice)
+	if err != nil {
+		return "", err
+	}
+
+	lunoLimitPrice, err := lunoFromShopSpringDecimal(order.LimitPrice)
+	if err != nil {
+		return "", err
+	}
+
+	lunoVolume, err := lunoFromShopSpringDecimal(order.Volume)
+	if err != nil {
+		return "", err
+	}
+
+	orderType, err := orderBookSideToLunoOrderType(order.Side)
+	if err != nil {
+		return "", err
+	}
+
+  req := luno_sdk.PostLimitOrderRequest{
+    Pair: l.tradingPair,
+		StopDirection: "RELATIVE_LAST_TRADE",
+		StopPrice: lunoStopPrice,
+    Price: lunoLimitPrice,
+    Volume: lunoVolume,
+    Type: orderType,
+  }
+
+  res, err := l.lunoSdk.PostLimitOrder(ctx, &req)
+  if err != nil {
+    return "", err
+  }
+
+  return res.OrderId, nil
+
+}
+
 func (l *client) CancelOrder(ctx context.Context, orderId string) error {
 
   req := luno_sdk.StopOrderRequest{
@@ -267,6 +310,40 @@ func convertLunoTrades(lunoTrades []luno_sdk.Trade) ([]exchangesdk.Trade, error)
 	}
 
 	return trades, nil
+}
+
+func orderBookSideToLunoOrderType(
+	side exchangesdk.OrderBookSide,
+) (luno_sdk.OrderType, error) {
+
+	switch side {
+	case exchangesdk.OrderBookSideBid:
+		return luno_sdk.OrderTypeBuy, nil
+	case exchangesdk.OrderBookSideAsk:
+		return luno_sdk.OrderTypeAsk, nil
+	default:
+		return luno_sdk.OrderTypeBid, fmt.Errorf(
+			"dont know how to convert OrderBookSide `%s` to luno_sdk.OrderType",
+			side,
+		)
+	}
+}
+
+func lunoOrderTypeToOrderBookSide(
+	orderType luno_sdk.OrderType,
+) (exchangesdk.OrderBookSide, error) {
+
+	switch orderType {
+	case luno_sdk.OrderTypeAsk:
+		return exchangesdk.OrderBookSideAsk, nil
+	case luno_sdk.OrderTypeBid:
+		return exchangesdk.OrderBookSideBid, nil
+	default:
+		return exchangesdk.OrderBookSideUnknown, fmt.Errorf(
+			"dont know how to convert luno_sdk.OrderType `%s` to OrderBookSide",
+			orderType,
+		)
+	}
 }
 
 // TODO add tests for this function around edge cases

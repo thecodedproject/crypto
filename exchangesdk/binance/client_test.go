@@ -255,6 +255,63 @@ func TestSuccessfulPostSellLimitOrderWhichReturns4XX(t *testing.T) {
 	assert.True(t, handlerCalled)
 }
 
+func TestPostStopLimitOrder(t *testing.T) {
+
+	pair := "BTCEUR"
+	order := exchangesdk.StopLimitOrder{
+		Side: exchangesdk.OrderBookSideAsk,
+		StopPrice: decimal.New(3456, -1),
+		LimitPrice: decimal.New(1232, -1),
+		Volume: decimal.New(5671, -2),
+	}
+	expectedId := "abc12346"
+
+	nowTime := time.Unix(12876, 0)
+	reset := utiltime.SetTimeNowForTesting(t, nowTime)
+	defer reset()
+
+	handlerCalled := false
+	c := binance.NewClientForTesting(t, "k", "s", pair, func(req *http.Request) *http.Response {
+
+		handlerCalled = true
+		assert.Contains(
+			t,
+			req.URL.String(),
+			"https://api.binance.com/api/v3/order",
+		)
+		assert.Equal(t, "POST", req.Method)
+
+		values := req.URL.Query()
+
+		assert.Equal(
+			t,
+			"b9b662465346539b0c4c818aacb2e569737413b18633e571f11a260fb4c775ab",
+			values.Get("signature"),
+		)
+		assert.Equal(t, timeAsMsStr(nowTime),	values.Get("timestamp"))
+		assert.Equal(t, "STOP_LOSS_LIMIT", values.Get("type"))
+		assert.Equal(t, "SELL", values.Get("side"))
+		assert.Equal(t, "GTC", values.Get("timeInForce"))
+		assert.Equal(t, string(pair), values.Get("symbol"))
+		assert.Equal(t, order.Volume.String(), values.Get("quantity"))
+		assert.Equal(t, order.LimitPrice.String(), values.Get("price"))
+		assert.Equal(t, order.StopPrice.String(), values.Get("stopPrice"))
+
+		assert.Equal(t, "k", req.Header.Get("X-MBX-APIKEY"))
+
+		return &http.Response{
+			StatusCode: 200,
+			Body: requestutil.ResBodyFromJsonf(t, "{\"clientOrderId\": \"%s\"}", expectedId),
+		}
+	})
+
+	id, err := c.PostStopLimitOrder(context.Background(), order)
+	require.NoError(t, err)
+
+	assert.True(t, handlerCalled)
+	assert.Equal(t, expectedId, id)
+}
+
 func TestSuccessfulCancelLimitOrder(t *testing.T) {
 
 	pair := "BTCEUR"

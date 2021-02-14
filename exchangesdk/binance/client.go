@@ -157,6 +157,45 @@ func (c *client) PostLimitOrder(
 	return res.Id, nil
 }
 
+func (c *client) PostStopLimitOrder(
+	ctx context.Context,
+	order exchangesdk.StopLimitOrder,
+) (string, error) {
+
+	side, err := sideFromOrderBookSide(order.Side)
+
+	values := url.Values{}
+	values.Add("type", "STOP_LOSS_LIMIT")
+	values.Add("side", side)
+	values.Add("timeInForce", "GTC")
+	values.Add("quantity", order.Volume.String())
+	values.Add("price", order.LimitPrice.String())
+	values.Add("stopPrice", order.StopPrice.String())
+
+	body, err := requestToOrderEndpointWithAuth(
+		"POST",
+		c.httpClient,
+		c.apiKey,
+		c.apiSecret,
+		c.tradingPair,
+		values,
+	)
+	if err != nil {
+		return "", err
+	}
+
+	res := struct{
+		Id string `json:"clientOrderId"`
+	}{}
+
+	err = json.Unmarshal(body, &res)
+	if err != nil {
+		return "", err
+	}
+
+	return res.Id, nil
+}
+
 func (c *client) CancelOrder(ctx context.Context, orderId string) error {
 
 	values := url.Values{}
@@ -336,4 +375,22 @@ func GetBody(res *http.Response, err error) ([]byte, error) {
 	}
 
 	return body, nil
+}
+
+func sideFromOrderBookSide(
+	side exchangesdk.OrderBookSide,
+) (string, error) {
+
+	switch side {
+	case exchangesdk.OrderBookSideBid:
+		return "BUY", nil
+	case exchangesdk.OrderBookSideAsk:
+		return "SELL", nil
+	default:
+		return "", fmt.Errorf(
+			"dont know how to convert OrderBookSide `%s` to binance order side",
+			side,
+		)
+	}
+
 }

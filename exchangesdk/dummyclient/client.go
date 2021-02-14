@@ -42,6 +42,12 @@ func (c *client) PostLimitOrder(ctx context.Context, order exchangesdk.Order) (s
 	return "some_order_id", nil
 }
 
+func (c *client) PostStopLimitOrder(ctx context.Context, order exchangesdk.StopLimitOrder) (string, error) {
+
+	c.lastOrderVolume = order.Volume
+	return "some_order_id", nil
+}
+
 func (c *client) CancelOrder(ctx context.Context, orderId string) error {
 
 	return nil

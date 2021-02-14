@@ -57,7 +57,7 @@ type Client interface {
 
 	PostLimitOrder(ctx context.Context, order Order) (string, error)
 
-	//PostStopLimitOrder(ctx context
+	PostStopLimitOrder(ctx context.Context, o StopLimitOrder) (string, error)
 
 	CancelOrder(ctx context.Context, orderId string) error
 

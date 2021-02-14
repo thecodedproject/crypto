@@ -41,7 +41,7 @@ func NewMarketFollower(
 				}
 				tradeFollower <- exchangesdk.OrderBookTrade{
 					Timestamp: time.Now(),
-					MakerSide: exchangesdk.MarketSideBuy,
+					MakerSide: exchangesdk.OrderBookSideBid,
 					Price: 150.0,
 					Volume: 0.1,
 				}
