@@ -35,6 +35,6 @@ const (
 )
 
 type Exchange struct {
-	Provider ApiProvider
-	Pair Pair
+	Provider ApiProvider `json:"provider"`
+	Pair Pair `json:"pair"`
 }
