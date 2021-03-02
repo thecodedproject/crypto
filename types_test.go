@@ -20,3 +20,20 @@ func TestMarshalMapWithExchangeAsKey(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestUnmarshalExchangeFromJson(t *testing.T) {
+
+	jsonString := `
+		{
+			"provider": "binance",
+			"pair": "ltcbtc"
+		}
+	`
+
+	var e crypto.Exchange
+	err := json.Unmarshal([]byte(jsonString), &e)
+	require.NoError(t, err)
+
+	require.Equal(t, crypto.ApiProviderBinance, e.Provider)
+	require.Equal(t, crypto.PairLTCBTC, e.Pair)
+}
+

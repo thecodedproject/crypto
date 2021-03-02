@@ -48,8 +48,12 @@ func (e Exchange) MarshalText() ([]byte, error) {
 	return []byte(e.String()), nil
 }
 
+/* TODO: We don't provider a custom unmarshal function here as we want the exchange type to unmarshalled
+	as using the json tags on the struct. This means that the Exchange type doesnt round trip in/out of JSON
+	which seems nasty - come up with a better way of solving this.
 func (e *Exchange) UnmarshalText(text []byte) error {
 	var err error
 	*e, err = ExchangeString(string(text))
 	return err
 }
+*/
