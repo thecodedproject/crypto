@@ -8,47 +8,47 @@ import (
 type CalcType int
 
 const (
-	CalcTypeAverage = 0
-	CalcTypeUnknown = 1
+	CalcTypeAverage  = 0
+	CalcTypeUnknown  = 1
 	calcTypeSentinal = 2
 )
 
 type Report struct {
-	Type CalcType `json:"type"`
-	InitalBaseBalance decimal.Decimal `json:"initial_base_balance"`
-	BaseBought decimal.Decimal `json:"base_bought"`
-	BaseSold decimal.Decimal `json:"base_sold"`
-	BaseFees decimal.Decimal `json:"base_fees"`
+	Type                 CalcType        `json:"type"`
+	InitalBaseBalance    decimal.Decimal `json:"initial_base_balance"`
+	BaseBought           decimal.Decimal `json:"base_bought"`
+	BaseSold             decimal.Decimal `json:"base_sold"`
+	BaseFees             decimal.Decimal `json:"base_fees"`
 	InitalCounterBalance decimal.Decimal `json:"initial_counter_balance"`
-	CounterBought decimal.Decimal `json:"counter_bought"`
-	CounterSold decimal.Decimal `json:"counter_sold"`
-	CounterFees decimal.Decimal `json:"counter_fees"`
-	OrderCount int64 `json:"order_count"`
+	CounterBought        decimal.Decimal `json:"counter_bought"`
+	CounterSold          decimal.Decimal `json:"counter_sold"`
+	CounterFees          decimal.Decimal `json:"counter_fees"`
+	OrderCount           int64           `json:"order_count"`
 }
 
 type Snapshot struct {
 	Report
-	RealisedGain decimal.Decimal `json:"realised_gain"`
-	UnrealisedGain decimal.Decimal `json:"unrealised_gain"`
-	AverageBuyPrice decimal.Decimal `json:"averagebuy_price"`
+	RealisedGain     decimal.Decimal `json:"realised_gain"`
+	UnrealisedGain   decimal.Decimal `json:"unrealised_gain"`
+	AverageBuyPrice  decimal.Decimal `json:"averagebuy_price"`
 	AverageSellPrice decimal.Decimal `json:"averagesell_price"`
-	BaseBalance decimal.Decimal `json:"base_balance"`
-	CounterBalance decimal.Decimal `json:"counter_balance"`
-	TotalVolume decimal.Decimal `json:"total_volume"`
-	TotalGain decimal.Decimal `json:"total_gain"`
+	BaseBalance      decimal.Decimal `json:"base_balance"`
+	CounterBalance   decimal.Decimal `json:"counter_balance"`
+	TotalVolume      decimal.Decimal `json:"total_volume"`
+	TotalGain        decimal.Decimal `json:"total_gain"`
 }
 
 func GenerateSnapshot(r Report, marketPrice decimal.Decimal) Snapshot {
 	return Snapshot{
-		Report: r,
-		RealisedGain: r.RealisedGain(),
-		UnrealisedGain: r.UnrealisedGain(marketPrice),
-		AverageBuyPrice: r.AverageBuyPrice(),
+		Report:           r,
+		RealisedGain:     r.RealisedGain(),
+		UnrealisedGain:   r.UnrealisedGain(marketPrice),
+		AverageBuyPrice:  r.AverageBuyPrice(),
 		AverageSellPrice: r.AverageSellPrice(),
-		BaseBalance: r.BaseBalance(),
-		CounterBalance: r.CounterBalance(),
-		TotalVolume: r.TotalVolume(),
-		TotalGain: r.TotalGain(marketPrice),
+		BaseBalance:      r.BaseBalance(),
+		CounterBalance:   r.CounterBalance(),
+		TotalVolume:      r.TotalVolume(),
+		TotalGain:        r.TotalGain(marketPrice),
 	}
 }
 
@@ -99,7 +99,7 @@ func Add(r Report, trades ...exchangesdk.Trade) Report {
 		if o.Type == exchangesdk.OrderTypeBid {
 			r.BaseBought = r.BaseBought.Add(o.Volume)
 			r.CounterSold = r.CounterSold.Add(orderCost)
-		}	else {
+		} else {
 			r.CounterBought = r.CounterBought.Add(orderCost)
 			r.BaseSold = r.BaseSold.Add(o.Volume)
 		}
@@ -111,4 +111,3 @@ func Add(r Report, trades ...exchangesdk.Trade) Report {
 
 	return r
 }
-

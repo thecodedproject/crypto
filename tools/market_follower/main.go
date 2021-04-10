@@ -3,29 +3,29 @@ package main
 import (
 	"context"
 	"flag"
+	"log"
+	"os"
+	"os/signal"
+	"sync"
+	"syscall"
+	"time"
+
+	"github.com/thecodedproject/crypto"
 	"github.com/thecodedproject/crypto/exchangesdk"
 	"github.com/thecodedproject/crypto/exchangesdk/factory"
 	"github.com/thecodedproject/crypto/exchangesdk/market_stats"
-	"github.com/thecodedproject/crypto/util"
-	"github.com/thecodedproject/crypto"
 	"github.com/thecodedproject/crypto/io"
-	"log"
-	"sync"
-	"time"
-	"os"
-	"os/signal"
-	"syscall"
+	"github.com/thecodedproject/crypto/util"
 )
 
-var logPeriod = 10*time.Second
+var logPeriod = 10 * time.Second
 var volumePrice = 1.0
 
 type Stats struct {
-
 	BestBid util.MovingStats
 	BestAsk util.MovingStats
 
-	VolumeBuyPrice util.MovingStats
+	VolumeBuyPrice  util.MovingStats
 	VolumeSellPrice util.MovingStats
 
 	BuySellWeight util.MovingStats
@@ -59,9 +59,9 @@ func updateStatsWithTrade(stats *Stats, trade *exchangesdk.OrderBookTrade) {
 	stats.BuySellWeight.Add(trade.Timestamp, weight)
 }
 
-func minutesAgo(i int) time.Time{
+func minutesAgo(i int) time.Time {
 
-	return time.Now().Add(time.Duration(-i)*time.Minute)
+	return time.Now().Add(time.Duration(-i) * time.Minute)
 }
 
 func logStats(stats *Stats) {
@@ -78,12 +78,12 @@ func logStats(stats *Stats) {
 		log.Fatal(err)
 	}
 
-	bestBid := stats.BestBid.Latest()//Mean(statsTime)
+	bestBid := stats.BestBid.Latest() //Mean(statsTime)
 	bestBidGrad, err := stats.BestBid.Gradient(statsTime)
 	if err != nil {
 		log.Fatal(err)
 	}
-	bestAsk := stats.BestAsk.Latest()//Mean(statsTime)
+	bestAsk := stats.BestAsk.Latest() //Mean(statsTime)
 	bestAskGrad, err := stats.BestAsk.Gradient(statsTime)
 	if err != nil {
 		log.Fatal(err)
@@ -138,7 +138,7 @@ func logStatsForever(
 		wg,
 		crypto.Exchange{
 			Provider: apiAuth.Provider,
-			Pair: crypto.PairBTCEUR,
+			Pair:     crypto.PairBTCEUR,
 		},
 		apiAuth,
 	)
@@ -149,11 +149,11 @@ func logStatsForever(
 	log.Printf("VolSell (var.)\t\tBestBid (var.)\t\tBestAsk (var.)\t\tVolBuy (var.)\t\tBSWeight(1m)\t\tBSWeight(5m)\n")
 
 	var stats Stats
-	stats.BuySellWeight = util.NewMovingStats(6*time.Minute)
-	stats.VolumeBuyPrice = util.NewMovingStats(6*time.Minute)
-	stats.VolumeSellPrice = util.NewMovingStats(6*time.Minute)
-	stats.BestBid = util.NewMovingStats(6*time.Minute)
-	stats.BestAsk = util.NewMovingStats(6*time.Minute)
+	stats.BuySellWeight = util.NewMovingStats(6 * time.Minute)
+	stats.VolumeBuyPrice = util.NewMovingStats(6 * time.Minute)
+	stats.VolumeSellPrice = util.NewMovingStats(6 * time.Minute)
+	stats.BestBid = util.NewMovingStats(6 * time.Minute)
+	stats.BestAsk = util.NewMovingStats(6 * time.Minute)
 
 	for {
 		select {

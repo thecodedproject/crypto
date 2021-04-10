@@ -7,23 +7,23 @@ package main
 
 import (
 	"context"
-	"log"
+	"encoding/json"
 	"flag"
 	"fmt"
-	"encoding/json"
+	"log"
 
-	"github.com/thecodedproject/crypto"
 	"github.com/shopspring/decimal"
+	"github.com/thecodedproject/crypto"
 	"github.com/thecodedproject/crypto/exchangesdk"
 	"github.com/thecodedproject/crypto/exchangesdk/factory"
 	"github.com/thecodedproject/crypto/io"
 )
 
 var (
-	authName = flag.String("api_auth", "", "API auth name to use")
-	authPath = flag.String("auth_path", "api_auth.json", "Auth file path")
-	pairName = flag.String("pair", "btcusdt", "Exchange pair to use")
-	runGetCommand = flag.Bool("get", false, "Run get order command")
+	authName         = flag.String("api_auth", "", "API auth name to use")
+	authPath         = flag.String("auth_path", "api_auth.json", "Auth file path")
+	pairName         = flag.String("pair", "btcusdt", "Exchange pair to use")
+	runGetCommand    = flag.Bool("get", false, "Run get order command")
 	runCancelCommand = flag.Bool("cancel", false, "Run cancel order command")
 	runCustomCommand = flag.Bool("custom", false, "Run custom command")
 )
@@ -97,8 +97,8 @@ func postLimitOrder(
 	orderID, err := exchangeClient.PostLimitOrder(
 		ctx,
 		exchangesdk.Order{
-			Type: exchangesdk.OrderTypeBid,
-			Price: decimal.NewFromFloat(50010),
+			Type:   exchangesdk.OrderTypeBid,
+			Price:  decimal.NewFromFloat(50010),
 			Volume: decimal.NewFromFloat(0.001),
 		},
 	)
@@ -119,10 +119,10 @@ func postStopLimitOrder(
 	orderID, err := exchangeClient.PostStopLimitOrder(
 		ctx,
 		exchangesdk.StopLimitOrder{
-			Side: exchangesdk.OrderBookSideAsk,
-			StopPrice: decimal.NewFromFloat(56855),
+			Side:       exchangesdk.OrderBookSideAsk,
+			StopPrice:  decimal.NewFromFloat(56855),
 			LimitPrice: decimal.NewFromFloat(56850),
-			Volume: decimal.NewFromFloat(0.0002),
+			Volume:     decimal.NewFromFloat(0.0002),
 		},
 	)
 	if err != nil {
@@ -191,7 +191,6 @@ func resolveCommand() Command {
 	return CommandUnknown
 }
 
-
 func main() {
 
 	flag.Parse()
@@ -215,7 +214,7 @@ func main() {
 	exchangeClient, err := factory.NewClient(
 		crypto.Exchange{
 			Provider: apiCreds.Provider,
-			Pair: pair,
+			Pair:     pair,
 		},
 		apiCreds.Key,
 		apiCreds.Secret,

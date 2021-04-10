@@ -1,6 +1,6 @@
 package exchangesdk
 
-import(
+import (
 	"time"
 
 	"github.com/shopspring/decimal"
@@ -10,7 +10,6 @@ import(
 //go:generate enumer -type=OrderState -trimprefix=OrderState -json -text -transform=snake
 
 type OrderBook struct {
-
 	Timestamp time.Time
 
 	Bids []OrderBookOrder
@@ -46,22 +45,22 @@ const (
 // OrderBookTrade represents a trade as seen in the OrderBook
 type OrderBookTrade struct {
 	MakerSide OrderBookSide
-	Price float64
-	Volume float64
+	Price     float64
+	Volume    float64
 	Timestamp time.Time
 }
 
 type StopLimitOrder struct {
-	Side OrderBookSide
-	StopPrice decimal.Decimal
+	Side       OrderBookSide
+	StopPrice  decimal.Decimal
 	LimitPrice decimal.Decimal
-	Volume decimal.Decimal
+	Volume     decimal.Decimal
 }
 
 type OrderStatus struct {
-	State OrderState
-	Type OrderType
-	FillAmountBase decimal.Decimal
+	State             OrderState
+	Type              OrderType
+	FillAmountBase    decimal.Decimal
 	FillAmountCounter decimal.Decimal
 }
 

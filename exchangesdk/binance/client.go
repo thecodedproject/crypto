@@ -2,22 +2,23 @@ package binance
 
 import (
 	"context"
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"net/url"
+	"strconv"
+	"testing"
+	"time"
+
 	"github.com/shopspring/decimal"
 	"github.com/thecodedproject/crypto"
 	"github.com/thecodedproject/crypto/exchangesdk"
 	"github.com/thecodedproject/crypto/exchangesdk/requestutil"
 	utiltime "github.com/thecodedproject/crypto/util/time"
-	"io/ioutil"
-	"net/http"
-	"net/url"
-	"testing"
-	"strconv"
-	"time"
-	"crypto/hmac"
-	"crypto/sha256"
-	"encoding/hex"
 )
 
 const (
@@ -25,14 +26,13 @@ const (
 )
 
 type client struct {
-
-	apiKey string
-	apiSecret string
-	httpClient *http.Client
+	apiKey      string
+	apiSecret   string
+	httpClient  *http.Client
 	tradingPair string
 }
 
-var _ exchangesdk.Client =  (*client)(nil)
+var _ exchangesdk.Client = (*client)(nil)
 
 func NewClient(
 	apiKey string,
@@ -46,13 +46,12 @@ func NewClient(
 	}
 
 	return &client{
-		apiKey: apiKey,
-		apiSecret: apiSecret,
-		httpClient: http.DefaultClient,
+		apiKey:      apiKey,
+		apiSecret:   apiSecret,
+		httpClient:  http.DefaultClient,
 		tradingPair: tradingPair,
 	}, nil
 }
-
 
 func NewClientForTesting(
 	t *testing.T,
@@ -63,7 +62,7 @@ func NewClientForTesting(
 ) *client {
 
 	return &client{
-		apiKey: apiKey,
+		apiKey:    apiKey,
 		apiSecret: apiSecret,
 		httpClient: &http.Client{
 			Transport: requestutil.RoundTripFunc(handler),
@@ -104,7 +103,7 @@ func (c *client) LatestPrice(ctx context.Context) (decimal.Decimal, error) {
 		return decimal.Decimal{}, err
 	}
 
-	latestPrice := struct{
+	latestPrice := struct {
 		Price decimal.Decimal `json:"price"`
 	}{}
 
@@ -145,7 +144,7 @@ func (c *client) PostLimitOrder(
 		return "", err
 	}
 
-	res := struct{
+	res := struct {
 		Id string `json:"clientOrderId"`
 	}{}
 
@@ -184,7 +183,7 @@ func (c *client) PostStopLimitOrder(
 		return "", err
 	}
 
-	res := struct{
+	res := struct {
 		Id string `json:"clientOrderId"`
 	}{}
 
@@ -232,12 +231,12 @@ func (c *client) GetOrderStatus(
 		return exchangesdk.OrderStatus{}, err
 	}
 
-	res := struct{
-		Status string `json:"status"`
-		Side string `json:"side"`
-		ExecutedQty decimal.Decimal `json:"executedQty"`
+	res := struct {
+		Status              string          `json:"status"`
+		Side                string          `json:"side"`
+		ExecutedQty         decimal.Decimal `json:"executedQty"`
 		CummulativeQuoteQty decimal.Decimal `json:"cummulativeQuoteQty"`
-		IsWorking bool `json:"isWorking"`
+		IsWorking           bool            `json:"isWorking"`
 	}{}
 
 	err = json.Unmarshal(body, &res)
@@ -264,9 +263,9 @@ func (c *client) GetOrderStatus(
 	}
 
 	return exchangesdk.OrderStatus{
-		State: state,
-		Type: orderType,
-		FillAmountBase: res.ExecutedQty,
+		State:             state,
+		Type:              orderType,
+		FillAmountBase:    res.ExecutedQty,
 		FillAmountCounter: res.CummulativeQuoteQty,
 	}, nil
 }
@@ -364,7 +363,7 @@ func GetBody(res *http.Response, err error) ([]byte, error) {
 
 		errStruct := struct {
 			ErrCode *int64 `json:"code"`
-			ErrMsg string `json:"msg"`
+			ErrMsg  string `json:"msg"`
 		}{}
 
 		err := json.Unmarshal(body, &errStruct)

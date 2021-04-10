@@ -1,7 +1,8 @@
 package exchangesdk
 
 import (
-  "context"
+	"context"
+
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/mock"
 )
@@ -9,7 +10,6 @@ import (
 type MockClient struct {
 	mock.Mock
 }
-
 
 func (m *MockClient) LatestPrice(ctx context.Context) (decimal.Decimal, error) {
 

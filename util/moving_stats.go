@@ -1,6 +1,6 @@
 package util
 
-import(
+import (
 	"fmt"
 	"math"
 	"time"
@@ -20,15 +20,14 @@ type MovingStats interface {
 }
 
 type movingStats struct {
-
-	values map[time.Time]float64
+	values           map[time.Time]float64
 	maxCacheDuration time.Duration
 }
 
 func NewMovingStats(maxCacheDuration time.Duration) MovingStats {
 
 	return &movingStats{
-		values: make(map[time.Time]float64),
+		values:           make(map[time.Time]float64),
 		maxCacheDuration: maxCacheDuration,
 	}
 }
@@ -102,7 +101,7 @@ func (ma *movingStats) MeanOrNan(since time.Time) float64 {
 		}
 	}
 
-	return sum/float64(count)
+	return sum / float64(count)
 }
 
 func (ma *movingStats) SumLatest(d time.Duration) (float64, error) {
@@ -190,7 +189,7 @@ func (ma *movingStats) MaxOrNan(since time.Time) float64 {
 		if !maxSet {
 			max = v
 			maxSet = true
-		} else if t.After(since) && v > max{
+		} else if t.After(since) && v > max {
 			max = v
 		}
 	}
@@ -240,7 +239,7 @@ func (ma *movingStats) MinOrNan(since time.Time) float64 {
 		if !minSet {
 			min = v
 			minSet = true
-		} else if t.After(since) && v < min{
+		} else if t.After(since) && v < min {
 			min = v
 		}
 	}

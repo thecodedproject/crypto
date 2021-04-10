@@ -7,9 +7,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/shopspring/decimal"
-	"github.com/thecodedproject/crypto/exchangesdk"
-	utiltime "github.com/thecodedproject/crypto/util/time"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -17,27 +14,30 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/shopspring/decimal"
+	"github.com/thecodedproject/crypto/exchangesdk"
+	utiltime "github.com/thecodedproject/crypto/util/time"
 )
 
 const (
-	httpsPrefix = "https://"
+	httpsPrefix    = "https://"
 	bitstampDomain = "www.bitstamp.net"
 )
 
 var ErrBadCheckSignature = fmt.Errorf("Bad check signature on response")
 
 type client struct {
-
-	apiKey string
-	apiSecret string
+	apiKey     string
+	apiSecret  string
 	httpClient *http.Client
 }
 
 func NewClient(apiKey, apiSecret string) (*client, error) {
 
 	return &client{
-		apiKey: apiKey,
-		apiSecret: apiSecret,
+		apiKey:     apiKey,
+		apiSecret:  apiSecret,
 		httpClient: http.DefaultClient,
 	}, nil
 }
@@ -57,7 +57,7 @@ func NewClientForTesting(
 ) *client {
 
 	return &client{
-		apiKey: apiKey,
+		apiKey:    apiKey,
 		apiSecret: apiSecret,
 		httpClient: &http.Client{
 			Transport: roundTripFunc(handler),
@@ -92,7 +92,7 @@ func (c *client) LatestPrice(ctx context.Context) (decimal.Decimal, error) {
 		return decimal.Decimal{}, err
 	}
 
-	latestPrice := struct{
+	latestPrice := struct {
 		Val decimal.Decimal `json:"last"`
 	}{}
 
@@ -131,9 +131,9 @@ func (c *client) PostLimitOrder(ctx context.Context, order exchangesdk.Order) (s
 		return "", err
 	}
 
-	resFields := struct{
-		Status *string `json:"status"`
-		ErrReason string `json:"reason"`
+	resFields := struct {
+		Status    *string `json:"status"`
+		ErrReason string  `json:"reason"`
 
 		Id string `json:"id"`
 	}{}
@@ -172,7 +172,7 @@ func (c *client) StopOrder(ctx context.Context, orderId string) error {
 		return err
 	}
 
-	resFields := struct{
+	resFields := struct {
 		Error *string `json:"error"`
 	}{}
 

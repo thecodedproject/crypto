@@ -2,8 +2,9 @@ package exchangesdk
 
 import (
 	"context"
-	"github.com/shopspring/decimal"
 	"time"
+
+	"github.com/shopspring/decimal"
 )
 
 // DEPRECATED: Use the MarketSide type instead
@@ -15,26 +16,25 @@ const (
 	OrderTypeAsk OrderType = "ASK"
 )
 
-
 // TODO Rename to LimitOrder (this type represents a placed limit order only - and not a generic 'order')
 // In general, we are moving to a place where there is no single `Order` type, but specialisations of Order
 // i.e. LimitOrder, OrderBookOrder, StopLimitOrder.
 type Order struct {
-	Id string `json:"id"`
-	Timestamp time.Time `json:"timestamp"`
-	Type OrderType `json:"type"`
-	Price decimal.Decimal `json:"price"`
-	Volume decimal.Decimal `json:"volume"`
+	Id        string          `json:"id"`
+	Timestamp time.Time       `json:"timestamp"`
+	Type      OrderType       `json:"type"`
+	Price     decimal.Decimal `json:"price"`
+	Volume    decimal.Decimal `json:"volume"`
 }
 
 type Trade struct {
-	OrderId string
-	Timestamp time.Time
-	Price decimal.Decimal
-	Volume decimal.Decimal
-	BaseFee decimal.Decimal
+	OrderId    string
+	Timestamp  time.Time
+	Price      decimal.Decimal
+	Volume     decimal.Decimal
+	BaseFee    decimal.Decimal
 	CounterFee decimal.Decimal
-	Type OrderType
+	Type       OrderType
 }
 
 type Client interface {

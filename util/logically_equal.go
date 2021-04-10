@@ -2,11 +2,12 @@ package util
 
 import (
 	"fmt"
-	"github.com/shopspring/decimal"
-  "github.com/stretchr/testify/assert"
 	"reflect"
-	"testing"
 	"sort"
+	"testing"
+
+	"github.com/shopspring/decimal"
+	"github.com/stretchr/testify/assert"
 )
 
 // TODO Add support for comparing pointers and arrays
@@ -57,7 +58,7 @@ func structsLogicallyEqual(
 	bValue := reflect.ValueOf(b)
 	retVal := true
 	publicFields := 0
-	for i:=0; i<aValue.Type().NumField(); i++ {
+	for i := 0; i < aValue.Type().NumField(); i++ {
 		if aValue.Field(i).CanInterface() {
 			fieldName := aValue.Type().Field(i).Name
 			aField := aValue.Field(i).Interface()

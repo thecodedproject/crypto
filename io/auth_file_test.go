@@ -1,9 +1,10 @@
 package io_test
 
 import (
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/thecodedproject/crypto/io"
-	"testing"
 )
 
 func TestReadAuthFile(t *testing.T) {

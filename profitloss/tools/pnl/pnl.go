@@ -5,12 +5,13 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"log"
+
 	"github.com/thecodedproject/crypto"
 	"github.com/thecodedproject/crypto/exchangesdk"
 	"github.com/thecodedproject/crypto/exchangesdk/luno"
 	"github.com/thecodedproject/crypto/io"
 	"github.com/thecodedproject/crypto/profitloss"
-	"log"
 )
 
 var (
@@ -24,7 +25,7 @@ const (
 func getAllTrades(ctx context.Context, c exchangesdk.Client) []exchangesdk.Trade {
 
 	trades := make([]exchangesdk.Trade, 0)
-	for page:=int64(1); page<=MAX_TRADE_PAGES; page++ {
+	for page := int64(1); page <= MAX_TRADE_PAGES; page++ {
 
 		tradesForPage, err := c.GetTrades(ctx, page)
 		if err != nil {

@@ -1,11 +1,12 @@
 package binance_test
 
 import (
-	"github.com/shopspring/decimal"
-	"github.com/thecodedproject/crypto/exchangesdk/binance"
-	"github.com/thecodedproject/crypto/exchangesdk"
-	"github.com/thecodedproject/gotest/assert"
 	"testing"
+
+	"github.com/shopspring/decimal"
+	"github.com/thecodedproject/crypto/exchangesdk"
+	"github.com/thecodedproject/crypto/exchangesdk/binance"
+	"github.com/thecodedproject/gotest/assert"
 )
 
 func D(f float64) decimal.Decimal {
@@ -17,11 +18,11 @@ func TestUpdateOrders(t *testing.T) {
 
 	currentOrders := []exchangesdk.OrderBookOrder{
 		{
-			Price: 1.0,
+			Price:  1.0,
 			Volume: 1.1,
 		},
 		{
-			Price: 2.0,
+			Price:  2.0,
 			Volume: 3.1,
 		},
 	}
@@ -34,11 +35,11 @@ func TestUpdateOrders(t *testing.T) {
 
 	expectedOrders := []exchangesdk.OrderBookOrder{
 		{
-			Price: 0.5,
+			Price:  0.5,
 			Volume: 1.2,
 		},
 		{
-			Price: 2.0,
+			Price:  2.0,
 			Volume: 2.1,
 		},
 	}
@@ -48,7 +49,7 @@ func TestUpdateOrders(t *testing.T) {
 		updates,
 		binance.ExchangeConfig{
 			PricePrecision: 1e-2,
-			VolPrecision: 1e-8,
+			VolPrecision:   1e-8,
 		},
 	)
 

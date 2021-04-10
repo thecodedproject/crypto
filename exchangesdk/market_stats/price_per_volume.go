@@ -2,6 +2,7 @@ package market_stats
 
 import (
 	"errors"
+
 	"github.com/thecodedproject/crypto/exchangesdk"
 )
 
@@ -57,7 +58,7 @@ func VolumePrice(
 		break
 	}
 
-	volumePrice := weightedPriceSum/volume
+	volumePrice := weightedPriceSum / volume
 
 	return volumePrice, nil
 }

@@ -2,6 +2,7 @@ package factory
 
 import (
 	"fmt"
+
 	"github.com/thecodedproject/crypto"
 	"github.com/thecodedproject/crypto/exchangesdk"
 	"github.com/thecodedproject/crypto/exchangesdk/binance"
@@ -30,10 +31,10 @@ func NewClient(
 		)
 	case crypto.ApiProviderDummyExchange:
 		return dummyclient.NewClient(
-				apiKey,
-				apiSecret,
-				exchange.Pair,
-			)
+			apiKey,
+			apiSecret,
+			exchange.Pair,
+		)
 	default:
 		return nil, fmt.Errorf("Cannot create client; Unknown Api provider %s", exchange.Provider)
 	}

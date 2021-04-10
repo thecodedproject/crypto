@@ -4,10 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/gorilla/websocket"
-	"github.com/thecodedproject/crypto"
-	"github.com/thecodedproject/crypto/exchangesdk"
-	"github.com/thecodedproject/crypto/exchangesdk/requestutil"
 	"log"
 	"math"
 	"net/http"
@@ -16,18 +12,23 @@ import (
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/gorilla/websocket"
+	"github.com/thecodedproject/crypto"
+	"github.com/thecodedproject/crypto/exchangesdk"
+	"github.com/thecodedproject/crypto/exchangesdk/requestutil"
 )
 
 const (
-	WEBSOCKET_LIFETIME = 55*time.Minute
+	WEBSOCKET_LIFETIME = 55 * time.Minute
 )
 
 type ExchangeConfig struct {
 	OrderBookStream string
-	TradesStream string
-	PairCode string
-	PricePrecision float64
-	VolPrecision float64
+	TradesStream    string
+	PairCode        string
+	PricePrecision  float64
+	VolPrecision    float64
 }
 
 type internalOrderBook struct {
@@ -59,50 +60,50 @@ func getExchangeConfig(pair crypto.Pair) (ExchangeConfig, error) {
 	case crypto.PairBTCEUR:
 		return ExchangeConfig{
 			OrderBookStream: "btceur@depth",
-			TradesStream: "btceur@trade",
-			PairCode: "BTCEUR",
-			PricePrecision: 1e-2,
-			VolPrecision: 1e-8,
+			TradesStream:    "btceur@trade",
+			PairCode:        "BTCEUR",
+			PricePrecision:  1e-2,
+			VolPrecision:    1e-8,
 		}, nil
 	case crypto.PairBTCGBP:
 		return ExchangeConfig{
 			OrderBookStream: "btcgbp@depth",
-			TradesStream: "btcgbp@trade",
-			PairCode: "BTCGBP",
-			PricePrecision: 1e-2,
-			VolPrecision: 1e-8,
+			TradesStream:    "btcgbp@trade",
+			PairCode:        "BTCGBP",
+			PricePrecision:  1e-2,
+			VolPrecision:    1e-8,
 		}, nil
 	case crypto.PairBTCUSDT:
 		return ExchangeConfig{
 			OrderBookStream: "btcusdt@depth",
-			TradesStream: "btcusdt@trade",
-			PairCode: "BTCUSDT",
-			PricePrecision: 1e-2,
-			VolPrecision: 1e-8,
+			TradesStream:    "btcusdt@trade",
+			PairCode:        "BTCUSDT",
+			PricePrecision:  1e-2,
+			VolPrecision:    1e-8,
 		}, nil
 	case crypto.PairLTCBTC:
 		return ExchangeConfig{
 			OrderBookStream: "ltcbtc@depth",
-			TradesStream: "ltcbtc@trade",
-			PairCode: "LTCBTC",
-			PricePrecision: 1e-6,
-			VolPrecision: 1e-2,
+			TradesStream:    "ltcbtc@trade",
+			PairCode:        "LTCBTC",
+			PricePrecision:  1e-6,
+			VolPrecision:    1e-2,
 		}, nil
 	case crypto.PairETHBTC:
 		return ExchangeConfig{
 			OrderBookStream: "ethbtc@depth",
-			TradesStream: "ethbtc@trade",
-			PairCode: "ETHBTC",
-			PricePrecision: 1e-6,
-			VolPrecision: 1e-3,
+			TradesStream:    "ethbtc@trade",
+			PairCode:        "ETHBTC",
+			PricePrecision:  1e-6,
+			VolPrecision:    1e-3,
 		}, nil
 	case crypto.PairBCHBTC:
 		return ExchangeConfig{
 			OrderBookStream: "bchbtc@depth",
-			TradesStream: "bchbtc@trade",
-			PairCode: "BCHBTC",
-			PricePrecision: 1e-6,
-			VolPrecision: 1e-3,
+			TradesStream:    "bchbtc@trade",
+			PairCode:        "BCHBTC",
+			PricePrecision:  1e-6,
+			VolPrecision:    1e-3,
 		}, nil
 	default:
 		return ExchangeConfig{}, fmt.Errorf("%s pair is not support by Binance market follower", pair)
@@ -172,9 +173,9 @@ func followForever(
 				return
 			}
 
-			update := struct{
-				Stream string `json:"stream"`
-				Data json.RawMessage `json:"data"`
+			update := struct {
+				Stream string          `json:"stream"`
+				Data   json.RawMessage `json:"data"`
 			}{}
 
 			err = json.Unmarshal(msg, &update)
@@ -207,14 +208,14 @@ func followForever(
 				tradeStream <- trade
 			}
 
-			if nextWs != nil && time.Since(nextWsAge) > time.Second{
+			if nextWs != nil && time.Since(nextWsAge) > time.Second {
 				ws.Close()
 				ws = nextWs
 				nextWs = nil
 				wsAge = nextWsAge
 			}
 
-			select{
+			select {
 			case <-ctx.Done():
 				wg.Done()
 				return
@@ -240,10 +241,10 @@ func getLatestSnapshot(pairCode string) (internalOrderBook, error) {
 		return internalOrderBook{}, err
 	}
 
-	snapshot := struct{
-		LastUpdateId int64 `json:"lastUpdateId"`
-		Bids [][]string `json:"bids"`
-		Asks [][]string `json:"asks"`
+	snapshot := struct {
+		LastUpdateId int64      `json:"lastUpdateId"`
+		Bids         [][]string `json:"bids"`
+		Asks         [][]string `json:"asks"`
 	}{}
 
 	err = json.Unmarshal(body, &snapshot)
@@ -282,13 +283,13 @@ func handleOrderBookUpdate(
 	exConf ExchangeConfig,
 ) error {
 
-	update := struct{
-		FirstUpdateId int64 `json:"U"`
-		LastUpdateId int64 `json:"u"`
-		BidUpdates [][]string `json:"b"`
-		AskUpdates [][]string `json:"a"`
-		Timestamp int64 `json:"E"`
-		Temp string `json:"e"`
+	update := struct {
+		FirstUpdateId int64      `json:"U"`
+		LastUpdateId  int64      `json:"u"`
+		BidUpdates    [][]string `json:"b"`
+		AskUpdates    [][]string `json:"a"`
+		Timestamp     int64      `json:"E"`
+		Temp          string     `json:"e"`
 	}{}
 
 	err := json.Unmarshal(updateMsg, &update)
@@ -324,20 +325,20 @@ func handleOrderBookUpdate(
 
 	ob.lastUpdateId = update.LastUpdateId
 
-	ob.Timestamp = time.Unix(0, update.Timestamp * int64(time.Millisecond))
+	ob.Timestamp = time.Unix(0, update.Timestamp*int64(time.Millisecond))
 
 	return nil
 }
 
 func decodeTrade(msgData []byte) (exchangesdk.OrderBookTrade, error) {
 
-	tradeJson := struct{
-		Price float64 `json:"p,string"`
-		Volume float64 `json:"q,string"`
-		BuyerIsMaker bool `json:"m,bool"`
-		Timestamp int64 `json:"E"`
-		Temp2 string `json:"e"`
-		Temp bool `json:"M,bool"`
+	tradeJson := struct {
+		Price        float64 `json:"p,string"`
+		Volume       float64 `json:"q,string"`
+		BuyerIsMaker bool    `json:"m,bool"`
+		Timestamp    int64   `json:"E"`
+		Temp2        string  `json:"e"`
+		Temp         bool    `json:"M,bool"`
 	}{}
 
 	err := json.Unmarshal(msgData, &tradeJson)
@@ -352,20 +353,20 @@ func decodeTrade(msgData []byte) (exchangesdk.OrderBookTrade, error) {
 
 	return exchangesdk.OrderBookTrade{
 		MakerSide: makerSide,
-		Price: tradeJson.Price,
-		Volume: tradeJson.Volume,
-		Timestamp: time.Unix(0, tradeJson.Timestamp * int64(time.Millisecond)),
+		Price:     tradeJson.Price,
+		Volume:    tradeJson.Volume,
+		Timestamp: time.Unix(0, tradeJson.Timestamp*int64(time.Millisecond)),
 	}, nil
 }
 
 func pricesEqual(a, b exchangesdk.OrderBookOrder, pricePrecision float64) bool {
 
-	return math.Abs(a.Price-b.Price) < (pricePrecision/float64(2))
+	return math.Abs(a.Price-b.Price) < (pricePrecision / float64(2))
 }
 
 func hasZeroVolume(o exchangesdk.OrderBookOrder, volPrecision float64) bool {
 
-	return math.Abs(o.Volume) < (volPrecision/float64(2))
+	return math.Abs(o.Volume) < (volPrecision / float64(2))
 }
 
 func UpdateOrders(
@@ -437,7 +438,7 @@ func convertOrderStrings(rawOrder []string) (exchangesdk.OrderBookOrder, error) 
 	}
 
 	return exchangesdk.OrderBookOrder{
-		Price: price,
+		Price:  price,
 		Volume: volume,
 	}, nil
 }
@@ -465,7 +466,6 @@ const (
 )
 
 func sortOrders(orders *[]exchangesdk.OrderBookOrder, ordering sortOrdering) error {
-
 
 	switch ordering {
 	case sortOrderingDecending:

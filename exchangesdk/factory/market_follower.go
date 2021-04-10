@@ -2,8 +2,9 @@ package factory
 
 import (
 	"context"
-	"sync"
 	"log"
+	"sync"
+
 	"github.com/thecodedproject/crypto"
 	"github.com/thecodedproject/crypto/exchangesdk"
 	"github.com/thecodedproject/crypto/exchangesdk/binance"

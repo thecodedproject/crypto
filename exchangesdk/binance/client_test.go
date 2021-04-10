@@ -2,6 +2,11 @@ package binance_test
 
 import (
 	"context"
+	"net/http"
+	"strconv"
+	"testing"
+	"time"
+
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -10,10 +15,6 @@ import (
 	"github.com/thecodedproject/crypto/exchangesdk/requestutil"
 	"github.com/thecodedproject/crypto/util"
 	utiltime "github.com/thecodedproject/crypto/util/time"
-	"net/http"
-	"strconv"
-	"testing"
-	"time"
 )
 
 func timeAsMsStr(t time.Time) string {
@@ -34,7 +35,7 @@ func TestLatestPriceWhenBinanceReturns200(t *testing.T) {
 		handlerCalled = true
 		assert.Equal(
 			t,
-			"https://api.binance.com/api/v3/ticker/price?symbol=" + string(pair),
+			"https://api.binance.com/api/v3/ticker/price?symbol="+string(pair),
 			req.URL.String(),
 		)
 
@@ -66,7 +67,7 @@ func TestLatestPriceWhenBinanceReturns400WithError(t *testing.T) {
 		handlerCalled = true
 		assert.Equal(
 			t,
-			"https://api.binance.com/api/v3/ticker/price?symbol=" + string(pair),
+			"https://api.binance.com/api/v3/ticker/price?symbol="+string(pair),
 			req.URL.String(),
 		)
 
@@ -90,8 +91,8 @@ func TestSuccessfulPostBuyLimitOrder(t *testing.T) {
 
 	pair := "BTCEUR"
 	order := exchangesdk.Order{
-		Type: exchangesdk.OrderTypeBid,
-		Price: decimal.New(1234, -1),
+		Type:   exchangesdk.OrderTypeBid,
+		Price:  decimal.New(1234, -1),
 		Volume: decimal.New(5678, -2),
 	}
 	expectedId := "dce12345"
@@ -118,7 +119,7 @@ func TestSuccessfulPostBuyLimitOrder(t *testing.T) {
 			"9fbe3b9a1e92dc1dbcc7298ba8a54b3e4572db6d046dc41079081a5ff072c863",
 			values.Get("signature"),
 		)
-		assert.Equal(t, timeAsMsStr(nowTime),	values.Get("timestamp"))
+		assert.Equal(t, timeAsMsStr(nowTime), values.Get("timestamp"))
 		assert.Equal(t, "LIMIT", values.Get("type"))
 		assert.Equal(t, "BUY", values.Get("side"))
 		assert.Equal(t, "GTC", values.Get("timeInForce"))
@@ -130,7 +131,7 @@ func TestSuccessfulPostBuyLimitOrder(t *testing.T) {
 
 		return &http.Response{
 			StatusCode: 200,
-			Body: requestutil.ResBodyFromJsonf(t, "{\"clientOrderId\": \"%s\"}", expectedId),
+			Body:       requestutil.ResBodyFromJsonf(t, "{\"clientOrderId\": \"%s\"}", expectedId),
 		}
 	})
 
@@ -145,8 +146,8 @@ func TestSuccessfulPostSellLimitOrder(t *testing.T) {
 
 	pair := "BTCEUR"
 	order := exchangesdk.Order{
-		Type: exchangesdk.OrderTypeAsk,
-		Price: decimal.New(1232, -1),
+		Type:   exchangesdk.OrderTypeAsk,
+		Price:  decimal.New(1232, -1),
 		Volume: decimal.New(5671, -2),
 	}
 	expectedId := "abc12346"
@@ -173,7 +174,7 @@ func TestSuccessfulPostSellLimitOrder(t *testing.T) {
 			"60b99103abfdb93655f2fca6cac7d6eb8fa2c2f7654bdbff09cbcae70b5cc3ce",
 			values.Get("signature"),
 		)
-		assert.Equal(t, timeAsMsStr(nowTime),	values.Get("timestamp"))
+		assert.Equal(t, timeAsMsStr(nowTime), values.Get("timestamp"))
 		assert.Equal(t, "LIMIT", values.Get("type"))
 		assert.Equal(t, "SELL", values.Get("side"))
 		assert.Equal(t, "GTC", values.Get("timeInForce"))
@@ -185,7 +186,7 @@ func TestSuccessfulPostSellLimitOrder(t *testing.T) {
 
 		return &http.Response{
 			StatusCode: 200,
-			Body: requestutil.ResBodyFromJsonf(t, "{\"clientOrderId\": \"%s\"}", expectedId),
+			Body:       requestutil.ResBodyFromJsonf(t, "{\"clientOrderId\": \"%s\"}", expectedId),
 		}
 	})
 
@@ -200,8 +201,8 @@ func TestSuccessfulPostSellLimitOrderWhichReturns4XX(t *testing.T) {
 
 	pair := "BTCEUR"
 	order := exchangesdk.Order{
-		Type: exchangesdk.OrderTypeAsk,
-		Price: decimal.New(1232, -1),
+		Type:   exchangesdk.OrderTypeAsk,
+		Price:  decimal.New(1232, -1),
 		Volume: decimal.New(5671, -2),
 	}
 
@@ -229,7 +230,7 @@ func TestSuccessfulPostSellLimitOrderWhichReturns4XX(t *testing.T) {
 			"60b99103abfdb93655f2fca6cac7d6eb8fa2c2f7654bdbff09cbcae70b5cc3ce",
 			values.Get("signature"),
 		)
-		assert.Equal(t, timeAsMsStr(nowTime),	values.Get("timestamp"))
+		assert.Equal(t, timeAsMsStr(nowTime), values.Get("timestamp"))
 		assert.Equal(t, "LIMIT", values.Get("type"))
 		assert.Equal(t, "SELL", values.Get("side"))
 		assert.Equal(t, "GTC", values.Get("timeInForce"))
@@ -258,10 +259,10 @@ func TestPostStopLimitOrder(t *testing.T) {
 
 	pair := "BTCEUR"
 	order := exchangesdk.StopLimitOrder{
-		Side: exchangesdk.OrderBookSideAsk,
-		StopPrice: decimal.New(3456, -1),
+		Side:       exchangesdk.OrderBookSideAsk,
+		StopPrice:  decimal.New(3456, -1),
 		LimitPrice: decimal.New(1232, -1),
-		Volume: decimal.New(5671, -2),
+		Volume:     decimal.New(5671, -2),
 	}
 	expectedId := "abc12346"
 
@@ -287,7 +288,7 @@ func TestPostStopLimitOrder(t *testing.T) {
 			"b9b662465346539b0c4c818aacb2e569737413b18633e571f11a260fb4c775ab",
 			values.Get("signature"),
 		)
-		assert.Equal(t, timeAsMsStr(nowTime),	values.Get("timestamp"))
+		assert.Equal(t, timeAsMsStr(nowTime), values.Get("timestamp"))
 		assert.Equal(t, "STOP_LOSS_LIMIT", values.Get("type"))
 		assert.Equal(t, "SELL", values.Get("side"))
 		assert.Equal(t, "GTC", values.Get("timeInForce"))
@@ -300,7 +301,7 @@ func TestPostStopLimitOrder(t *testing.T) {
 
 		return &http.Response{
 			StatusCode: 200,
-			Body: requestutil.ResBodyFromJsonf(t, "{\"clientOrderId\": \"%s\"}", expectedId),
+			Body:       requestutil.ResBodyFromJsonf(t, "{\"clientOrderId\": \"%s\"}", expectedId),
 		}
 	})
 
@@ -338,7 +339,7 @@ func TestSuccessfulCancelLimitOrder(t *testing.T) {
 			"2e59d9fe933e4a7426488fff23ab145c9350d2cb61949ac7eef3cd46c3b164a2",
 			values.Get("signature"),
 		)
-		assert.Equal(t, timeAsMsStr(nowTime),	values.Get("timestamp"))
+		assert.Equal(t, timeAsMsStr(nowTime), values.Get("timestamp"))
 		assert.Equal(t, string(pair), values.Get("symbol"))
 		assert.Equal(t, orderId, values.Get("origClientOrderId"))
 
@@ -387,7 +388,7 @@ func TestUnsuccessfulCancelLimitOrder(t *testing.T) {
 			"2e59d9fe933e4a7426488fff23ab145c9350d2cb61949ac7eef3cd46c3b164a2",
 			values.Get("signature"),
 		)
-		assert.Equal(t, timeAsMsStr(nowTime),	values.Get("timestamp"))
+		assert.Equal(t, timeAsMsStr(nowTime), values.Get("timestamp"))
 		assert.Equal(t, string(pair), values.Get("symbol"))
 		assert.Equal(t, orderId, values.Get("origClientOrderId"))
 
@@ -411,75 +412,75 @@ func TestUnsuccessfulCancelLimitOrder(t *testing.T) {
 
 func TestSuccessfulGetOrderStatus(t *testing.T) {
 
-	testCases := []struct{
-		name string
-		resBody string
+	testCases := []struct {
+		name           string
+		resBody        string
 		expectedStatus exchangesdk.OrderStatus
 	}{
 		{
-			name: "Bid stop limit order, not triggered, no fill",
+			name:    "Bid stop limit order, not triggered, no fill",
 			resBody: "{\"executedQty\": \"0.0\", \"status\": \"NEW\", \"side\": \"BUY\", \"isWorking\": false}",
 			expectedStatus: exchangesdk.OrderStatus{
-				State: exchangesdk.OrderStateAwaitingTrigger,
-				Type: exchangesdk.OrderTypeBid,
+				State:          exchangesdk.OrderStateAwaitingTrigger,
+				Type:           exchangesdk.OrderTypeBid,
 				FillAmountBase: decimal.Decimal{},
 			},
 		},
 		{
-			name: "Bid order, pending, no fill",
+			name:    "Bid order, pending, no fill",
 			resBody: "{\"executedQty\": \"0.0\", \"status\": \"NEW\", \"side\": \"BUY\", \"isWorking\": true}",
 			expectedStatus: exchangesdk.OrderStatus{
-				State: exchangesdk.OrderStateInOrderBook,
-				Type: exchangesdk.OrderTypeBid,
+				State:          exchangesdk.OrderStateInOrderBook,
+				Type:           exchangesdk.OrderTypeBid,
 				FillAmountBase: decimal.Decimal{},
 			},
 		},
 		{
-			name: "Bid order, pending, partial fill",
+			name:    "Bid order, pending, partial fill",
 			resBody: "{\"executedQty\": \"1.23\", \"status\": \"PARTIALLY_FILLED\", \"side\": \"BUY\", \"isWorking\": true, \"cummulativeQuoteQty\": \"45.6\"}",
 			expectedStatus: exchangesdk.OrderStatus{
-				State: exchangesdk.OrderStateInOrderBook,
-				Type: exchangesdk.OrderTypeBid,
-				FillAmountBase: decimal.New(123, -2),
+				State:             exchangesdk.OrderStateInOrderBook,
+				Type:              exchangesdk.OrderTypeBid,
+				FillAmountBase:    decimal.New(123, -2),
 				FillAmountCounter: decimal.New(456, -1),
 			},
 		},
 		{
-			name: "Bid order, completed, filled",
+			name:    "Bid order, completed, filled",
 			resBody: "{\"executedQty\": \"2.23\", \"status\": \"FILLED\", \"side\": \"BUY\", \"isWorking\": true, \"cummulativeQuoteQty\": \"7.89\"}",
 			expectedStatus: exchangesdk.OrderStatus{
-				State: exchangesdk.OrderStateFilled,
-				Type: exchangesdk.OrderTypeBid,
-				FillAmountBase: decimal.New(223, -2),
+				State:             exchangesdk.OrderStateFilled,
+				Type:              exchangesdk.OrderTypeBid,
+				FillAmountBase:    decimal.New(223, -2),
 				FillAmountCounter: decimal.New(789, -2),
 			},
 		},
 		{
-			name: "Ask order, pending, no fill",
+			name:    "Ask order, pending, no fill",
 			resBody: "{\"executedQty\": \"0.0\", \"status\": \"NEW\", \"side\": \"SELL\", \"isWorking\": true}",
 			expectedStatus: exchangesdk.OrderStatus{
-				State: exchangesdk.OrderStateInOrderBook,
-				Type: exchangesdk.OrderTypeAsk,
+				State:          exchangesdk.OrderStateInOrderBook,
+				Type:           exchangesdk.OrderTypeAsk,
 				FillAmountBase: decimal.Decimal{},
 			},
 		},
 		{
-			name: "Ask order, pending, partial fill",
+			name:    "Ask order, pending, partial fill",
 			resBody: "{\"executedQty\": \"1.23\", \"status\": \"PARTIALLY_FILLED\", \"side\": \"SELL\", \"isWorking\": true, \"cummulativeQuoteQty\": \"4.89\"}",
 			expectedStatus: exchangesdk.OrderStatus{
-				State: exchangesdk.OrderStateInOrderBook,
-				Type: exchangesdk.OrderTypeAsk,
-				FillAmountBase: decimal.New(123, -2),
+				State:             exchangesdk.OrderStateInOrderBook,
+				Type:              exchangesdk.OrderTypeAsk,
+				FillAmountBase:    decimal.New(123, -2),
 				FillAmountCounter: decimal.New(489, -2),
 			},
 		},
 		{
-			name: "Ask order, completed, filled",
+			name:    "Ask order, completed, filled",
 			resBody: "{\"executedQty\": \"4.23\", \"status\": \"FILLED\", \"side\": \"SELL\", \"isWorking\": true, \"cummulativeQuoteQty\": \"3.89\"}",
 			expectedStatus: exchangesdk.OrderStatus{
-				State: exchangesdk.OrderStateFilled,
-				Type: exchangesdk.OrderTypeAsk,
-				FillAmountBase: decimal.New(423, -2),
+				State:             exchangesdk.OrderStateFilled,
+				Type:              exchangesdk.OrderTypeAsk,
+				FillAmountBase:    decimal.New(423, -2),
 				FillAmountCounter: decimal.New(389, -2),
 			},
 		},
@@ -513,7 +514,7 @@ func TestSuccessfulGetOrderStatus(t *testing.T) {
 					"981ba3a377fd892908878bfcd98b889743037e7e8c8468bded3389a6ca062b9b",
 					values.Get("signature"),
 				)
-				assert.Equal(t, timeAsMsStr(nowTime),	values.Get("timestamp"))
+				assert.Equal(t, timeAsMsStr(nowTime), values.Get("timestamp"))
 				assert.Equal(t, string(pair), values.Get("symbol"))
 				assert.Equal(t, orderId, values.Get("origClientOrderId"))
 

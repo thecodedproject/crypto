@@ -3,6 +3,7 @@ package dummyclient
 import (
 	"context"
 	"math/rand"
+
 	"github.com/shopspring/decimal"
 	"github.com/thecodedproject/crypto"
 	"github.com/thecodedproject/crypto/exchangesdk"
@@ -64,7 +65,7 @@ func (c *client) GetOrderStatus(
 		}, nil
 	} else {
 		return exchangesdk.OrderStatus{
-			State: exchangesdk.OrderStateFilled,
+			State:          exchangesdk.OrderStateFilled,
 			FillAmountBase: c.lastOrderVolume,
 		}, nil
 	}

@@ -3,13 +3,14 @@ package requestutil
 import (
 	"bytes"
 	"fmt"
-	"github.com/stretchr/testify/require"
 	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func FullPath(baseUrl string, paths ...string) *url.URL {

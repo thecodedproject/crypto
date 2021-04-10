@@ -4,14 +4,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"testing"
+	"time"
+
+	luno_sdk "github.com/luno/luno-go"
+	lunodecimal "github.com/luno/luno-go/decimal"
 	"github.com/shopspring/decimal"
 	"github.com/thecodedproject/crypto"
 	"github.com/thecodedproject/crypto/exchangesdk"
 	"github.com/thecodedproject/crypto/util"
-	"testing"
-	"time"
-	luno_sdk "github.com/luno/luno-go"
-	lunodecimal "github.com/luno/luno-go/decimal"
 )
 
 // LunoSdk is the interface presented by the Luno Go SDK.
@@ -25,13 +26,13 @@ type LunoSdk interface {
 }
 
 type tradesAndLastSeq struct {
-	Trades []exchangesdk.Trade
+	Trades              []exchangesdk.Trade
 	SequenceOfLastTrade int64
 }
 
 type client struct {
-  lunoSdk LunoSdk
-	tradingPair string
+	lunoSdk      LunoSdk
+	tradingPair  string
 	tradesByPage map[int64]tradesAndLastSeq
 }
 
@@ -46,21 +47,21 @@ func NewClient(
 		return nil, err
 	}
 
-  c := luno_sdk.NewClient()
-  c.SetAuth(id, secret)
+	c := luno_sdk.NewClient()
+	c.SetAuth(id, secret)
 
-  return &client{
-    lunoSdk: c,
-		tradingPair: tradingPair,
+	return &client{
+		lunoSdk:      c,
+		tradingPair:  tradingPair,
 		tradesByPage: make(map[int64]tradesAndLastSeq),
-  }, nil
+	}, nil
 }
 
 func NewClientForTesting(_ *testing.T, lunoSdk LunoSdk) *client {
 
 	return &client{
-		lunoSdk: lunoSdk,
-		tradingPair: "TestPair",
+		lunoSdk:      lunoSdk,
+		tradingPair:  "TestPair",
 		tradesByPage: make(map[int64]tradesAndLastSeq),
 	}
 }
@@ -85,16 +86,16 @@ func getLunoTradingPair(pair crypto.Pair) (string, error) {
 
 func (l *client) LatestPrice(ctx context.Context) (decimal.Decimal, error) {
 
-  req := luno_sdk.GetTickerRequest{Pair: l.tradingPair}
-  res, err := l.lunoSdk.GetTicker(ctx, &req)
-  if err != nil {
-    return decimal.Decimal{}, err
-  }
+	req := luno_sdk.GetTickerRequest{Pair: l.tradingPair}
+	res, err := l.lunoSdk.GetTicker(ctx, &req)
+	if err != nil {
+		return decimal.Decimal{}, err
+	}
 
-  askPrice := res.Ask
-  bidPrice := res.Bid
+	askPrice := res.Ask
+	bidPrice := res.Bid
 
-  midPrice := bidPrice.Add(askPrice.Sub(bidPrice).DivInt64(2))
+	midPrice := bidPrice.Add(askPrice.Sub(bidPrice).DivInt64(2))
 
 	return lunoToShopSpringDecimal(midPrice)
 }
@@ -110,20 +111,20 @@ func (l *client) PostLimitOrder(ctx context.Context, order exchangesdk.Order) (s
 		return "", err
 	}
 
-  req := luno_sdk.PostLimitOrderRequest{
-    Pair: l.tradingPair,
-    Price: lunoPrice,
-    Volume: lunoVolume,
-    Type: luno_sdk.OrderType(order.Type),
-    PostOnly: true,
-  }
+	req := luno_sdk.PostLimitOrderRequest{
+		Pair:     l.tradingPair,
+		Price:    lunoPrice,
+		Volume:   lunoVolume,
+		Type:     luno_sdk.OrderType(order.Type),
+		PostOnly: true,
+	}
 
-  res, err := l.lunoSdk.PostLimitOrder(ctx, &req)
-  if err != nil {
-    return "", err
-  }
+	res, err := l.lunoSdk.PostLimitOrder(ctx, &req)
+	if err != nil {
+		return "", err
+	}
 
-  return res.OrderId, nil
+	return res.OrderId, nil
 }
 
 func (l *client) PostStopLimitOrder(
@@ -151,40 +152,40 @@ func (l *client) PostStopLimitOrder(
 		return "", err
 	}
 
-  req := luno_sdk.PostLimitOrderRequest{
-    Pair: l.tradingPair,
+	req := luno_sdk.PostLimitOrderRequest{
+		Pair:          l.tradingPair,
 		StopDirection: "RELATIVE_LAST_TRADE",
-		StopPrice: lunoStopPrice,
-    Price: lunoLimitPrice,
-    Volume: lunoVolume,
-    Type: orderType,
-  }
+		StopPrice:     lunoStopPrice,
+		Price:         lunoLimitPrice,
+		Volume:        lunoVolume,
+		Type:          orderType,
+	}
 
-  res, err := l.lunoSdk.PostLimitOrder(ctx, &req)
-  if err != nil {
-    return "", err
-  }
+	res, err := l.lunoSdk.PostLimitOrder(ctx, &req)
+	if err != nil {
+		return "", err
+	}
 
-  return res.OrderId, nil
+	return res.OrderId, nil
 
 }
 
 func (l *client) CancelOrder(ctx context.Context, orderId string) error {
 
-  req := luno_sdk.StopOrderRequest{
-    OrderId: orderId,
-  }
+	req := luno_sdk.StopOrderRequest{
+		OrderId: orderId,
+	}
 
-  res, err := l.lunoSdk.StopOrder(ctx, &req)
-  if err != nil {
-    return nil
-  }
+	res, err := l.lunoSdk.StopOrder(ctx, &req)
+	if err != nil {
+		return nil
+	}
 
 	if res.Success == false {
 		return errors.New("Failed to stop order")
 	}
 
-  return nil
+	return nil
 }
 
 func (l *client) MakerFee() decimal.Decimal {
@@ -204,18 +205,18 @@ func (l *client) BasePrecision() int32 {
 
 func (l *client) GetOrderStatus(ctx context.Context, orderId string) (exchangesdk.OrderStatus, error) {
 
-  req := luno_sdk.GetOrderRequest{
-    Id: orderId,
-  }
+	req := luno_sdk.GetOrderRequest{
+		Id: orderId,
+	}
 
-  res, err := l.lunoSdk.GetOrder(ctx, &req)
-  if err != nil {
-    return exchangesdk.OrderStatus{}, err
-  }
+	res, err := l.lunoSdk.GetOrder(ctx, &req)
+	if err != nil {
+		return exchangesdk.OrderStatus{}, err
+	}
 
 	fillAmountBase, err := lunoToShopSpringDecimal(res.Base)
 	if err != nil {
-    return exchangesdk.OrderStatus{}, err
+		return exchangesdk.OrderStatus{}, err
 	}
 
 	state := exchangesdk.OrderStateUnknown
@@ -227,14 +228,14 @@ func (l *client) GetOrderStatus(ctx context.Context, orderId string) (exchangesd
 		state = exchangesdk.OrderStateCancelled
 	}
 
-  return exchangesdk.OrderStatus{
-    State: state,
-    Type: exchangesdk.OrderType(res.Type),
+	return exchangesdk.OrderStatus{
+		State:          state,
+		Type:           exchangesdk.OrderType(res.Type),
 		FillAmountBase: fillAmountBase,
-  }, nil
+	}, nil
 }
 
-func (l* client) GetTrades(ctx context.Context, page int64) ([]exchangesdk.Trade, error) {
+func (l *client) GetTrades(ctx context.Context, page int64) ([]exchangesdk.Trade, error) {
 
 	if page < 1 {
 		return nil, errors.New(
@@ -277,7 +278,7 @@ func (l* client) GetTrades(ctx context.Context, page int64) ([]exchangesdk.Trade
 
 	if len(trades) == 100 {
 		l.tradesByPage[page] = tradesAndLastSeq{
-			Trades: trades,
+			Trades:              trades,
 			SequenceOfLastTrade: res.Trades[99].Sequence,
 		}
 	}
@@ -308,13 +309,13 @@ func convertLunoTrades(lunoTrades []luno_sdk.Trade) ([]exchangesdk.Trade, error)
 		}
 
 		trades = append(trades, exchangesdk.Trade{
-			OrderId: lunoTrade.OrderId,
-			Timestamp: time.Time(lunoTrade.Timestamp),
-			Price: price,
-			Volume: volume,
-			BaseFee: baseFee,
+			OrderId:    lunoTrade.OrderId,
+			Timestamp:  time.Time(lunoTrade.Timestamp),
+			Price:      price,
+			Volume:     volume,
+			BaseFee:    baseFee,
 			CounterFee: counterFee,
-			Type: exchangesdk.OrderType(lunoTrade.Type),
+			Type:       exchangesdk.OrderType(lunoTrade.Type),
 		})
 	}
 

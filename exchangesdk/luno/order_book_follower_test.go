@@ -1,18 +1,19 @@
 package luno_test
 
 import (
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/thecodedproject/crypto/exchangesdk/luno"
-	"testing"
 )
 
 func TestHandleUpdate(t *testing.T) {
 
-	testCases := []struct{
-		Name string
-		OrderBook luno.InternalOrderBook
-		Update luno.OrderBookUpdate
+	testCases := []struct {
+		Name              string
+		OrderBook         luno.InternalOrderBook
+		Update            luno.OrderBookUpdate
 		ExpectedOrderBook luno.InternalOrderBook
 	}{
 		{
@@ -48,11 +49,11 @@ func TestHandleUpdate(t *testing.T) {
 				Sequence: 2,
 				TradeUpdates: []*luno.TradeUpdate{
 					{
-						Base: 0.25,
+						Base:         0.25,
 						MakerOrderId: "a1",
 					},
 					{
-						Base: 1.0,
+						Base:         1.0,
 						MakerOrderId: "b1",
 					},
 				},
@@ -72,7 +73,7 @@ func TestHandleUpdate(t *testing.T) {
 			},
 			ExpectedOrderBook: luno.InternalOrderBook{
 				LastSequenceId: 2,
-				Bids: map[string]luno.Order{},
+				Bids:           map[string]luno.Order{},
 				Asks: map[string]luno.Order{
 					"a1": luno.Order{
 						Volume: 0.75,
@@ -85,9 +86,9 @@ func TestHandleUpdate(t *testing.T) {
 			Update: luno.OrderBookUpdate{
 				Sequence: 2,
 				CreateUpdate: &luno.CreateUpdate{
-					OrderId: "b2",
+					OrderId:   "b2",
 					OrderType: "BID",
-					Volume: 1.4,
+					Volume:    1.4,
 				},
 			},
 			OrderBook: luno.InternalOrderBook{
@@ -110,7 +111,7 @@ func TestHandleUpdate(t *testing.T) {
 						Volume: 1.0,
 					},
 					"b2": luno.Order{
-						Id: "b2",
+						Id:     "b2",
 						Volume: 1.4,
 					},
 				},
@@ -149,8 +150,7 @@ func TestHandleUpdate(t *testing.T) {
 						Volume: 1.0,
 					},
 				},
-				Asks: map[string]luno.Order{
-				},
+				Asks: map[string]luno.Order{},
 			},
 		},
 	}

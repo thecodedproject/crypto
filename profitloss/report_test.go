@@ -2,11 +2,12 @@ package profitloss_test
 
 import (
 	"fmt"
-	"github.com/thecodedproject/crypto/exchangesdk"
-	"github.com/thecodedproject/crypto/profitloss"
+	"testing"
+
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
-	"testing"
+	"github.com/thecodedproject/crypto/exchangesdk"
+	"github.com/thecodedproject/crypto/profitloss"
 )
 
 const (
@@ -40,15 +41,15 @@ func D(f float64) decimal.Decimal {
 
 func TestAveragePriceReport_AverageBuyPrice(t *testing.T) {
 
-	testCases := []struct{
-		Name string
-		Report profitloss.Report
+	testCases := []struct {
+		Name            string
+		Report          profitloss.Report
 		AverageBuyPrice decimal.Decimal
 	}{
 		{
 			Name: "Positive value",
 			Report: profitloss.Report{
-				BaseBought: D(22.5),
+				BaseBought:  D(22.5),
 				CounterSold: D(3375.0),
 			},
 			AverageBuyPrice: D(150.0),
@@ -71,22 +72,21 @@ func TestAveragePriceReport_AverageBuyPrice(t *testing.T) {
 
 func TestAveragePriceReport_AverageSellPrice(t *testing.T) {
 	r := profitloss.Report{
-		BaseSold: D(16.0),
+		BaseSold:      D(16.0),
 		CounterBought: D(2620.0),
 	}
 
 	assertDecimalsEqual(t, D(163.75), r.AverageSellPrice())
 
-
-	testCases := []struct{
-		Name string
-		Report profitloss.Report
+	testCases := []struct {
+		Name             string
+		Report           profitloss.Report
 		AverageSellPrice decimal.Decimal
 	}{
 		{
 			Name: "Positive value",
 			Report: profitloss.Report{
-				BaseSold: D(16.0),
+				BaseSold:      D(16.0),
 				CounterBought: D(2620.0),
 			},
 			AverageSellPrice: D(163.75),
@@ -109,17 +109,17 @@ func TestAveragePriceReport_AverageSellPrice(t *testing.T) {
 
 func TestAveragePriceReport_RealisedGain(t *testing.T) {
 
-	testCases := []struct{
-		Name string
-		Report profitloss.Report
+	testCases := []struct {
+		Name         string
+		Report       profitloss.Report
 		RealisedGain decimal.Decimal
 	}{
 		{
 			Name: "No fees and bought more than sold uses sold volume",
 			Report: profitloss.Report{
-				BaseBought: D(22.5),
-				CounterSold: D(3375.0),
-				BaseSold: D(16.0),
+				BaseBought:    D(22.5),
+				CounterSold:   D(3375.0),
+				BaseSold:      D(16.0),
 				CounterBought: D(2620.0),
 			},
 			RealisedGain: D(220.0),
@@ -127,9 +127,9 @@ func TestAveragePriceReport_RealisedGain(t *testing.T) {
 		{
 			Name: "No fees and sold more than bought uses bought volume",
 			Report: profitloss.Report{
-				BaseBought: D(16.0),
-				CounterSold: D(2620.0),
-				BaseSold: D(22.5),
+				BaseBought:    D(16.0),
+				CounterSold:   D(2620.0),
+				BaseSold:      D(22.5),
 				CounterBought: D(3375.0),
 			},
 			RealisedGain: D(-220.0),
@@ -137,11 +137,11 @@ func TestAveragePriceReport_RealisedGain(t *testing.T) {
 		{
 			Name: "Counter fees are removed from realised gain",
 			Report: profitloss.Report{
-				BaseBought: D(16.0),
-				CounterSold: D(2620.0),
-				BaseSold: D(22.5),
+				BaseBought:    D(16.0),
+				CounterSold:   D(2620.0),
+				BaseSold:      D(22.5),
 				CounterBought: D(3375.0),
-				CounterFees: D(25.5),
+				CounterFees:   D(25.5),
 			},
 			RealisedGain: D(-245.5),
 		},
@@ -156,31 +156,31 @@ func TestAveragePriceReport_RealisedGain(t *testing.T) {
 
 func TestAveragePriceReport_UnrealisedGain(t *testing.T) {
 
-	testCases := []struct{
-		Name string
-		Report profitloss.Report
-		MarketPrice decimal.Decimal
+	testCases := []struct {
+		Name           string
+		Report         profitloss.Report
+		MarketPrice    decimal.Decimal
 		UnrealisedGain decimal.Decimal
 	}{
 		{
 			Name: "No fees",
 			Report: profitloss.Report{
-				BaseBought: D(22.5),
-				BaseSold: D(16.0),
+				BaseBought:  D(22.5),
+				BaseSold:    D(16.0),
 				CounterSold: D(3375.0),
 			},
-			MarketPrice: D(127.25),
+			MarketPrice:    D(127.25),
 			UnrealisedGain: D(-147.875),
 		},
 		{
 			Name: "With base fees",
 			Report: profitloss.Report{
-				BaseBought: D(22.5),
-				BaseSold: D(16.0),
+				BaseBought:  D(22.5),
+				BaseSold:    D(16.0),
 				CounterSold: D(3375.0),
-				BaseFees: D(1.0),
+				BaseFees:    D(1.0),
 			},
-			MarketPrice: D(130.75),
+			MarketPrice:    D(130.75),
 			UnrealisedGain: D(-105.875),
 		},
 	}
@@ -194,16 +194,16 @@ func TestAveragePriceReport_UnrealisedGain(t *testing.T) {
 
 func TestAveragePriceReport_BaseBalance(t *testing.T) {
 
-	testCases := []struct{
-		Name string
-		Report profitloss.Report
+	testCases := []struct {
+		Name        string
+		Report      profitloss.Report
 		BaseBalance decimal.Decimal
 	}{
 		{
 			Name: "No fees",
 			Report: profitloss.Report{
 				BaseBought: D(22.5),
-				BaseSold: D(16.0),
+				BaseSold:   D(16.0),
 			},
 			BaseBalance: D(6.5),
 		},
@@ -211,8 +211,8 @@ func TestAveragePriceReport_BaseBalance(t *testing.T) {
 			Name: "Base fees are subtracted from balance",
 			Report: profitloss.Report{
 				BaseBought: D(22.5),
-				BaseSold: D(16.0),
-				BaseFees: D(7.6),
+				BaseSold:   D(16.0),
+				BaseFees:   D(7.6),
 			},
 			BaseBalance: D(-1.1),
 		},
@@ -220,9 +220,9 @@ func TestAveragePriceReport_BaseBalance(t *testing.T) {
 			Name: "When inital base balance is not zero",
 			Report: profitloss.Report{
 				InitalBaseBalance: D(30.5),
-				BaseBought: D(22.5),
-				BaseSold: D(16.0),
-				BaseFees: D(7.6),
+				BaseBought:        D(22.5),
+				BaseSold:          D(16.0),
+				BaseFees:          D(7.6),
 			},
 			BaseBalance: D(29.4),
 		},
@@ -237,16 +237,16 @@ func TestAveragePriceReport_BaseBalance(t *testing.T) {
 
 func TestAveragePriceReport_CounterBalance(t *testing.T) {
 
-	testCases := []struct{
-		Name string
-		Report profitloss.Report
+	testCases := []struct {
+		Name           string
+		Report         profitloss.Report
 		CounterBalance decimal.Decimal
 	}{
 		{
 			Name: "No fees",
 			Report: profitloss.Report{
 				CounterBought: D(22.5),
-				CounterSold: D(16.0),
+				CounterSold:   D(16.0),
 			},
 			CounterBalance: D(6.5),
 		},
@@ -254,8 +254,8 @@ func TestAveragePriceReport_CounterBalance(t *testing.T) {
 			Name: "Counter fees are subtracted from balance",
 			Report: profitloss.Report{
 				CounterBought: D(22.5),
-				CounterSold: D(16.0),
-				CounterFees: D(7.6),
+				CounterSold:   D(16.0),
+				CounterFees:   D(7.6),
 			},
 			CounterBalance: D(-1.1),
 		},
@@ -263,9 +263,9 @@ func TestAveragePriceReport_CounterBalance(t *testing.T) {
 			Name: "When inital counter balance is not zero",
 			Report: profitloss.Report{
 				InitalCounterBalance: D(12.5),
-				CounterBought: D(22.5),
-				CounterSold: D(16.0),
-				CounterFees: D(7.6),
+				CounterBought:        D(22.5),
+				CounterSold:          D(16.0),
+				CounterFees:          D(7.6),
 			},
 			CounterBalance: D(11.4),
 		},
@@ -281,7 +281,7 @@ func TestAveragePriceReport_CounterBalance(t *testing.T) {
 func TestAveragePriceReport_TotalVolume(t *testing.T) {
 	r := profitloss.Report{
 		BaseBought: D(36.2),
-		BaseSold: D(16.5),
+		BaseSold:   D(16.5),
 	}
 
 	assertDecimalsEqual(t, D(52.7), r.TotalVolume())
@@ -289,12 +289,12 @@ func TestAveragePriceReport_TotalVolume(t *testing.T) {
 
 func TestAveragePriceReport_TotalGain(t *testing.T) {
 	r := profitloss.Report{
-		BaseBought: D(22.5),
-		BaseSold: D(16.0),
+		BaseBought:    D(22.5),
+		BaseSold:      D(16.0),
 		CounterBought: D(3375.0),
-		CounterSold: D(3375.0),
-		BaseFees: D(1.0),
-		CounterFees: D(25.5),
+		CounterSold:   D(3375.0),
+		BaseFees:      D(1.0),
+		CounterFees:   D(25.5),
 	}
 
 	marketPrice := D(130.75)
@@ -304,9 +304,9 @@ func TestAveragePriceReport_TotalGain(t *testing.T) {
 func TestAddTradesToAveragePriceReport(t *testing.T) {
 
 	testCases := []struct {
-		Name string
-		Inital profitloss.Report
-		Trades []exchangesdk.Trade
+		Name     string
+		Inital   profitloss.Report
+		Trades   []exchangesdk.Trade
 		Expected profitloss.Report
 	}{
 		{
@@ -316,138 +316,138 @@ func TestAddTradesToAveragePriceReport(t *testing.T) {
 			Name: "Multiple buy and sell orders with more buy volume than sell volume uses avterage prices and total volume sold for realised gain",
 			Trades: []exchangesdk.Trade{
 				{
-					Price: D(100.0),
+					Price:  D(100.0),
 					Volume: D(15.0),
-					Type: Bid,
+					Type:   Bid,
 				},
 				{
-					Price: D(150.0),
+					Price:  D(150.0),
 					Volume: D(5.0),
-					Type: Ask,
+					Type:   Ask,
 				},
 				{
-					Price: D(250.0),
+					Price:  D(250.0),
 					Volume: D(7.5),
-					Type: Bid,
+					Type:   Bid,
 				},
 				{
-					Price: D(170.0),
+					Price:  D(170.0),
 					Volume: D(11.0),
-					Type: Ask,
+					Type:   Ask,
 				},
 			},
 			Expected: profitloss.Report{
-				BaseBought: D(22.5),
-				BaseSold: D(16.0),
+				BaseBought:    D(22.5),
+				BaseSold:      D(16.0),
 				CounterBought: D(2620.0),
-				CounterSold: D(3375.0),
-				OrderCount: 4,
+				CounterSold:   D(3375.0),
+				OrderCount:    4,
 			},
 		},
 		{
 			Name: "Multiple buy and sell orders with more sell volume than buy volume uses average prices and total buy volume",
 			Trades: []exchangesdk.Trade{
 				{
-					Price: D(150.0),
+					Price:  D(150.0),
 					Volume: D(15.0),
-					Type: Ask,
+					Type:   Ask,
 				},
 				{
-					Price: D(200.0),
+					Price:  D(200.0),
 					Volume: D(25.0),
-					Type: Ask,
+					Type:   Ask,
 				},
 				{
-					Price: D(175.0),
+					Price:  D(175.0),
 					Volume: D(20.0),
-					Type: Bid,
+					Type:   Bid,
 				},
 				{
-					Price: D(160.0),
+					Price:  D(160.0),
 					Volume: D(10.0),
-					Type: Bid,
+					Type:   Bid,
 				},
 			},
 			Expected: profitloss.Report{
-				BaseBought: D(30.0),
-				BaseSold: D(40.0),
+				BaseBought:    D(30.0),
+				BaseSold:      D(40.0),
 				CounterBought: D(7250.0),
-				CounterSold: D(5100.0),
-				OrderCount: 4,
+				CounterSold:   D(5100.0),
+				OrderCount:    4,
 			},
 		},
 		{
 			Name: "Multiple buy and sell orders with some base fees remove base fees from base balance",
 			Trades: []exchangesdk.Trade{
 				{
-					Price: D(100.0),
-					Volume: D(5.0),
+					Price:   D(100.0),
+					Volume:  D(5.0),
 					BaseFee: D(1.1),
-					Type: Bid,
+					Type:    Bid,
 				},
 				{
-					Price: D(200.0),
-					Volume: D(15.0),
+					Price:   D(200.0),
+					Volume:  D(15.0),
 					BaseFee: D(2.2),
-					Type: Bid,
+					Type:    Bid,
 				},
 				{
-					Price: D(120.0),
-					Volume: D(6.0),
+					Price:   D(120.0),
+					Volume:  D(6.0),
 					BaseFee: D(3.3),
-					Type: Ask,
+					Type:    Ask,
 				},
 				{
-					Price: D(140.0),
-					Volume: D(9.0),
+					Price:   D(140.0),
+					Volume:  D(9.0),
 					BaseFee: D(4.4),
-					Type: Ask,
+					Type:    Ask,
 				},
 			},
 			Expected: profitloss.Report{
-				BaseBought: D(20.0),
-				BaseSold: D(15.0),
-				BaseFees: D(11.0),
+				BaseBought:    D(20.0),
+				BaseSold:      D(15.0),
+				BaseFees:      D(11.0),
 				CounterBought: D(1980.0),
-				CounterSold: D(3500.0),
-				OrderCount: 4,
+				CounterSold:   D(3500.0),
+				OrderCount:    4,
 			},
 		},
 		{
 			Name: "Multiple buy and sell orders with some counter fees remove base fees from counter balance and realised gain",
 			Trades: []exchangesdk.Trade{
 				{
-					Price: D(200.26),
-					Volume: D(5.0),
+					Price:      D(200.26),
+					Volume:     D(5.0),
 					CounterFee: D(1.1),
-					Type: Bid,
+					Type:       Bid,
 				},
 				{
-					Price: D(140.0),
-					Volume: D(5.0),
+					Price:      D(140.0),
+					Volume:     D(5.0),
 					CounterFee: D(2.2),
-					Type: Bid,
+					Type:       Bid,
 				},
 				{
-					Price: D(120.0),
-					Volume: D(8.5),
+					Price:      D(120.0),
+					Volume:     D(8.5),
 					CounterFee: D(3.3),
-					Type: Ask,
+					Type:       Ask,
 				},
 				{
-					Price: D(160.0),
-					Volume: D(1.5),
+					Price:      D(160.0),
+					Volume:     D(1.5),
 					CounterFee: D(4.4),
-					Type: Ask,
+					Type:       Ask,
 				},
 			},
 			Expected: profitloss.Report{
-				BaseBought: D(10.0),
-				BaseSold: D(10.0),
+				BaseBought:    D(10.0),
+				BaseSold:      D(10.0),
 				CounterBought: D(1260.0),
-				CounterSold: D(1701.3),
-				CounterFees: D(11.0),
-				OrderCount: 4,
+				CounterSold:   D(1701.3),
+				CounterFees:   D(11.0),
+				OrderCount:    4,
 			},
 		},
 	}

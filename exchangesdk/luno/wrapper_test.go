@@ -2,22 +2,23 @@ package luno_test
 
 import (
 	"context"
+	"strconv"
+	"testing"
+
+	luno_sdk "github.com/luno/luno-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/thecodedproject/crypto/exchangesdk"
 	"github.com/thecodedproject/crypto/exchangesdk/luno"
-	"strconv"
-	"testing"
-	luno_sdk "github.com/luno/luno-go"
 )
 
 func makeSomeLunoTrades(n int64, offset int64) []luno_sdk.Trade {
 
 	trades := make([]luno_sdk.Trade, 0, n)
-	for i:=offset; i<(n+offset); i++ {
+	for i := offset; i < (n + offset); i++ {
 		trades = append(trades, luno_sdk.Trade{
-			OrderId: strconv.FormatInt(i, 10),
+			OrderId:  strconv.FormatInt(i, 10),
 			Sequence: i,
 		})
 	}
@@ -27,7 +28,7 @@ func makeSomeLunoTrades(n int64, offset int64) []luno_sdk.Trade {
 func makeSomeTrades(n int64) []exchangesdk.Trade {
 
 	trades := make([]exchangesdk.Trade, 0, n)
-	for i:=int64(0); i<n; i++ {
+	for i := int64(0); i < n; i++ {
 		trades = append(trades, exchangesdk.Trade{
 			OrderId: strconv.FormatInt(i, 10),
 		})
@@ -72,11 +73,11 @@ func TestGetTradesFirstPageWhenThereAreSomeTrades(t *testing.T) {
 	res := luno_sdk.ListUserTradesResponse{
 		Trades: []luno_sdk.Trade{
 			{
-				OrderId: "1",
+				OrderId:  "1",
 				Sequence: 1,
 			},
 			{
-				OrderId: "2",
+				OrderId:  "2",
 				Sequence: 2,
 			},
 		},
@@ -138,13 +139,13 @@ func TestGetTradesSecondPageWhenFirstPageIsFull(t *testing.T) {
 	m.On("ListUserTrades", mock.Anything, &firstReq).Return(&firstRes, nil)
 
 	secondReq := luno_sdk.ListUserTradesRequest{
-		Pair: "TestPair",
+		Pair:     "TestPair",
 		AfterSeq: 99,
 	}
 	secondRes := luno_sdk.ListUserTradesResponse{
 		Trades: []luno_sdk.Trade{
 			{
-				OrderId: "201",
+				OrderId:  "201",
 				Sequence: 201,
 			},
 		},
@@ -178,13 +179,13 @@ func TestRepeatedlyGetTradesForSecondPageWhenFirstPageIsFullRequestsFirstPageOnc
 	m.On("ListUserTrades", mock.Anything, &firstReq).Return(&firstRes, nil).Once()
 
 	secondReq := luno_sdk.ListUserTradesRequest{
-		Pair: "TestPair",
+		Pair:     "TestPair",
 		AfterSeq: 99,
 	}
 	secondRes := luno_sdk.ListUserTradesResponse{
 		Trades: []luno_sdk.Trade{
 			{
-				OrderId: "201",
+				OrderId:  "201",
 				Sequence: 201,
 			},
 		},
@@ -226,7 +227,7 @@ func TestRepeatedlyGetTradesForThridPageWhenSecondANdFirstPageIsFullRequestsThos
 	m.On("ListUserTrades", mock.Anything, &firstReq).Return(&firstRes, nil).Once()
 
 	secondReq := luno_sdk.ListUserTradesRequest{
-		Pair: "TestPair",
+		Pair:     "TestPair",
 		AfterSeq: 99,
 	}
 	secondRes := luno_sdk.ListUserTradesResponse{
@@ -235,13 +236,13 @@ func TestRepeatedlyGetTradesForThridPageWhenSecondANdFirstPageIsFullRequestsThos
 	m.On("ListUserTrades", mock.Anything, &secondReq).Return(&secondRes, nil).Once()
 
 	thirdReq := luno_sdk.ListUserTradesRequest{
-		Pair: "TestPair",
+		Pair:     "TestPair",
 		AfterSeq: 199,
 	}
 	thirdRes := luno_sdk.ListUserTradesResponse{
 		Trades: []luno_sdk.Trade{
 			{
-				OrderId: "301",
+				OrderId:  "301",
 				Sequence: 301,
 			},
 		},
@@ -283,13 +284,13 @@ func TestGetTradesThirdPageWhenSecondPageIsNotFullReturnsEmpty(t *testing.T) {
 	m.On("ListUserTrades", mock.Anything, &firstReq).Return(&firstRes, nil).Once()
 
 	secondReq := luno_sdk.ListUserTradesRequest{
-		Pair: "TestPair",
+		Pair:     "TestPair",
 		AfterSeq: 99,
 	}
 	secondRes := luno_sdk.ListUserTradesResponse{
 		Trades: []luno_sdk.Trade{
 			{
-				OrderId: "201",
+				OrderId:  "201",
 				Sequence: 201,
 			},
 		},
@@ -304,7 +305,6 @@ func TestGetTradesThirdPageWhenSecondPageIsNotFullReturnsEmpty(t *testing.T) {
 	assert.Equal(t, 0, len(trades))
 }
 
-
 func TestGetTradesForHundredthPageWhenOnlyFirstPageHasTradesOnlyRequestsFirstPageFromAPI(t *testing.T) {
 
 	m := new(luno.MockLunoSdk)
@@ -315,11 +315,11 @@ func TestGetTradesForHundredthPageWhenOnlyFirstPageHasTradesOnlyRequestsFirstPag
 	res := luno_sdk.ListUserTradesResponse{
 		Trades: []luno_sdk.Trade{
 			{
-				OrderId: "1",
+				OrderId:  "1",
 				Sequence: 1,
 			},
 			{
-				OrderId: "2",
+				OrderId:  "2",
 				Sequence: 2,
 			},
 		},

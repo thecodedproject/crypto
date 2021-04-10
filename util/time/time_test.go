@@ -1,10 +1,11 @@
 package time_test
 
 import (
-  "github.com/stretchr/testify/assert"
-	utiltime "github.com/thecodedproject/crypto/util/time"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
+	utiltime "github.com/thecodedproject/crypto/util/time"
 )
 
 func TestSetTimeNowFuncAndReset(t *testing.T) {

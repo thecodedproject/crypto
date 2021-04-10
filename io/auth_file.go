@@ -3,9 +3,9 @@ package io
 import (
 	"errors"
 	"fmt"
+
 	"github.com/thecodedproject/crypto"
 )
-
 
 func ReadAuthFile(authPath string) (map[string]crypto.AuthConfig, error) {
 
@@ -74,4 +74,3 @@ func validateAuthFields(authName string, auth crypto.AuthConfig) error {
 
 	return nil
 }
-

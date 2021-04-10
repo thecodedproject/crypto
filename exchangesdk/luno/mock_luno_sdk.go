@@ -2,8 +2,9 @@ package luno
 
 import (
 	"context"
-	"github.com/stretchr/testify/mock"
+
 	luno_sdk "github.com/luno/luno-go"
+	"github.com/stretchr/testify/mock"
 )
 
 // MockLunoSdk provides a testify mock of the LunoSDK API
@@ -35,4 +36,3 @@ func (m *MockLunoSdk) ListUserTrades(ctx context.Context, req *luno_sdk.ListUser
 	args := m.Called(ctx, req)
 	return args.Get(0).(*luno_sdk.ListUserTradesResponse), args.Error(1)
 }
-

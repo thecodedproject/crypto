@@ -2,10 +2,11 @@ package dummyclient
 
 import (
 	"context"
-	"github.com/thecodedproject/crypto"
-	"github.com/thecodedproject/crypto/exchangesdk"
 	"sync"
 	"time"
+
+	"github.com/thecodedproject/crypto"
+	"github.com/thecodedproject/crypto/exchangesdk"
 )
 
 func NewMarketFollower(
@@ -28,13 +29,13 @@ func NewMarketFollower(
 					Timestamp: time.Now(),
 					Bids: []exchangesdk.OrderBookOrder{
 						{
-							Price: 100.0,
+							Price:  100.0,
 							Volume: 1.0,
 						},
 					},
 					Asks: []exchangesdk.OrderBookOrder{
 						{
-							Price: 200.0,
+							Price:  200.0,
 							Volume: 1.0,
 						},
 					},
@@ -42,8 +43,8 @@ func NewMarketFollower(
 				tradeFollower <- exchangesdk.OrderBookTrade{
 					Timestamp: time.Now(),
 					MakerSide: exchangesdk.OrderBookSideBid,
-					Price: 150.0,
-					Volume: 0.1,
+					Price:     150.0,
+					Volume:    0.1,
 				}
 			}
 		}

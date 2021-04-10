@@ -4,17 +4,18 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/gorilla/websocket"
-	"github.com/thecodedproject/crypto"
-	"github.com/thecodedproject/crypto/exchangesdk"
 	"log"
 	"math"
 	"sync"
 	"time"
+
+	"github.com/gorilla/websocket"
+	"github.com/thecodedproject/crypto"
+	"github.com/thecodedproject/crypto/exchangesdk"
 )
 
 type exchangeConfig struct {
-	WsUrl string
+	WsUrl                 string
 	MarketVolumePrecision float64
 }
 
@@ -22,35 +23,35 @@ type InternalOrderBook struct {
 	Bids map[string]Order
 	Asks map[string]Order
 
-	LastSequenceId int64
+	LastSequenceId      int64
 	LastUpdateTimestamp int64
 }
 
 type Order struct {
-	Id string `json:"id"`
-	Price float64 `json:"price,string"`
+	Id     string  `json:"id"`
+	Price  float64 `json:"price,string"`
 	Volume float64 `json:"volume,string"`
 }
 
 type OrderBookSnapshot struct {
-	Sequence int64 `json:"sequence,string"`
-	Asks []Order `json:"asks"`
-	Bids []Order `json:"bids"`
-	Timestamp int64 `json:"timestamp"`
+	Sequence  int64   `json:"sequence,string"`
+	Asks      []Order `json:"asks"`
+	Bids      []Order `json:"bids"`
+	Timestamp int64   `json:"timestamp"`
 }
 
 type TradeUpdate struct {
-	Base float64 `json:"base,string"`
-	Counter float64 `json:"counter,string"`
-	MakerOrderId string `json:"maker_order_id"`
+	Base         float64 `json:"base,string"`
+	Counter      float64 `json:"counter,string"`
+	MakerOrderId string  `json:"maker_order_id"`
 	//TakerOrderId string `json:"taker_order_id"`
 }
 
 type CreateUpdate struct {
-	OrderId string `json:"order_id"`
-	OrderType string `json:"type"`
-	Price float64 `json:"price,string"`
-	Volume float64 `json:"volume,string"`
+	OrderId   string  `json:"order_id"`
+	OrderType string  `json:"type"`
+	Price     float64 `json:"price,string"`
+	Volume    float64 `json:"volume,string"`
 }
 
 type DeleteUpdate struct {
@@ -62,14 +63,13 @@ type StatusUpdate struct {
 }
 
 type OrderBookUpdate struct {
-	Sequence int64 `json:"sequence,string"`
+	Sequence     int64          `json:"sequence,string"`
 	TradeUpdates []*TradeUpdate `json:"trade_updates"`
-	CreateUpdate *CreateUpdate `json:"create_update"`
-	DeleteUpdate *DeleteUpdate `json:"delete_update"`
-	StatusUpdate *StatusUpdate `json:"status_update"`
-	Timestamp int64 `json:"timestamp"`
+	CreateUpdate *CreateUpdate  `json:"create_update"`
+	DeleteUpdate *DeleteUpdate  `json:"delete_update"`
+	StatusUpdate *StatusUpdate  `json:"status_update"`
+	Timestamp    int64          `json:"timestamp"`
 }
-
 
 func NewOrderBookFollowerAndTradeStream(
 	ctx context.Context,
@@ -98,27 +98,27 @@ func getExchangeConfig(pair crypto.Pair) (exchangeConfig, error) {
 	switch pair {
 	case crypto.PairBTCEUR:
 		return exchangeConfig{
-			WsUrl: "wss://ws.luno.com/api/1/stream/XBTEUR",
+			WsUrl:                 "wss://ws.luno.com/api/1/stream/XBTEUR",
 			MarketVolumePrecision: 1e-4,
 		}, nil
 	case crypto.PairBTCGBP:
 		return exchangeConfig{
-			WsUrl: "wss://ws.luno.com/api/1/stream/XBTGBP",
+			WsUrl:                 "wss://ws.luno.com/api/1/stream/XBTGBP",
 			MarketVolumePrecision: 1e-4,
 		}, nil
 	case crypto.PairLTCBTC:
 		return exchangeConfig{
-			WsUrl: "wss://ws.luno.com/api/1/stream/LTCXBT",
+			WsUrl:                 "wss://ws.luno.com/api/1/stream/LTCXBT",
 			MarketVolumePrecision: 1e-2,
 		}, nil
 	case crypto.PairETHBTC:
 		return exchangeConfig{
-			WsUrl: "wss://ws.luno.com/api/1/stream/ETHXBT",
+			WsUrl:                 "wss://ws.luno.com/api/1/stream/ETHXBT",
 			MarketVolumePrecision: 1e-2,
 		}, nil
 	case crypto.PairBCHBTC:
 		return exchangeConfig{
-			WsUrl: "wss://ws.luno.com/api/1/stream/BCHXBT",
+			WsUrl:                 "wss://ws.luno.com/api/1/stream/BCHXBT",
 			MarketVolumePrecision: 1e-2,
 		}, nil
 	default:
@@ -146,11 +146,11 @@ func followForever(
 		}
 		defer ws.Close()
 
-		creds := struct{
-			Key string `json:"api_key_id"`
+		creds := struct {
+			Key    string `json:"api_key_id"`
 			Secret string `json:"api_key_secret"`
 		}{
-			Key: apiKey,
+			Key:    apiKey,
 			Secret: apiSecret,
 		}
 
@@ -209,7 +209,7 @@ func followForever(
 				obf <- *toSortedOrderBook(&ob)
 			}
 
-			select{
+			select {
 			case <-ctx.Done():
 				wg.Done()
 				return
@@ -221,7 +221,6 @@ func followForever(
 
 	return obf, tradeStream, nil
 }
-
 
 func handleSnapshot(ob *InternalOrderBook, s OrderBookSnapshot) {
 
@@ -262,7 +261,7 @@ func toSortedOrderBook(ob *InternalOrderBook) *exchangesdk.OrderBook {
 
 	exchangesdk.SortOrderBook(&o)
 
-	o.Timestamp = time.Unix(0, ob.LastUpdateTimestamp * int64(time.Millisecond))
+	o.Timestamp = time.Unix(0, ob.LastUpdateTimestamp*int64(time.Millisecond))
 
 	return &o
 }
@@ -413,9 +412,9 @@ func convertToSdkTrade(
 
 	return exchangesdk.OrderBookTrade{
 		MakerSide: makerSide,
-		Price: t.Counter,
-		Volume: t.Base,
-		Timestamp: time.Unix(0, timestamp * int64(time.Millisecond)),
+		Price:     t.Counter,
+		Volume:    t.Base,
+		Timestamp: time.Unix(0, timestamp*int64(time.Millisecond)),
 	}, nil
 }
 
@@ -424,5 +423,5 @@ func hasZeroVolume(
 	volPrecision float64,
 ) bool {
 
-	return math.Abs(o.Volume) < (volPrecision/float64(2))
+	return math.Abs(o.Volume) < (volPrecision / float64(2))
 }

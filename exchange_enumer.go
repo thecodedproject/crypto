@@ -40,7 +40,7 @@ func ExchangeString(s string) (Exchange, error) {
 
 	return Exchange{
 		Provider: apiProvider,
-		Pair: pair,
+		Pair:     pair,
 	}, nil
 }
 

@@ -7,5 +7,3 @@ const (
 	BTCEUR
 	pairSentinal
 )
-
-

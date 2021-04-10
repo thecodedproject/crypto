@@ -28,7 +28,6 @@ const (
 
 func sortOrders(orders *[]OrderBookOrder, ordering sortOrdering) error {
 
-
 	switch ordering {
 	case sortOrderingDecending:
 		sort.Slice(*orders, func(i, j int) bool {

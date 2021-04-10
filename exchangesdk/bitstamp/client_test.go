@@ -4,13 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/shopspring/decimal"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"github.com/thecodedproject/crypto/exchangesdk"
-	"github.com/thecodedproject/crypto/exchangesdk/bitstamp"
-	"github.com/thecodedproject/crypto/util"
-	utiltime "github.com/thecodedproject/crypto/util/time"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -18,6 +11,14 @@ import (
 	"strconv"
 	"testing"
 	"time"
+
+	"github.com/shopspring/decimal"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/thecodedproject/crypto/exchangesdk"
+	"github.com/thecodedproject/crypto/exchangesdk/bitstamp"
+	"github.com/thecodedproject/crypto/util"
+	utiltime "github.com/thecodedproject/crypto/util/time"
 )
 
 func TestLatestPriceWhenBitstampReturns200(t *testing.T) {
@@ -60,7 +61,7 @@ func TestLatestPriceWhenBitstampReturns4XXReturnsError(t *testing.T) {
 		)
 
 		return &http.Response{
-			Status: "403 - Not Authorised",
+			Status:     "403 - Not Authorised",
 			StatusCode: 403,
 		}
 	})
@@ -70,12 +71,11 @@ func TestLatestPriceWhenBitstampReturns4XXReturnsError(t *testing.T) {
 	assert.True(t, handlerCalled)
 }
 
-
 func TestSuccessfulPostBuyLimitOrder(t *testing.T) {
 
 	order := exchangesdk.Order{
-		Type: exchangesdk.OrderTypeBid,
-		Price: decimal.New(1234, -1),
+		Type:   exchangesdk.OrderTypeBid,
+		Price:  decimal.New(1234, -1),
 		Volume: decimal.New(5678, -2),
 	}
 	expectedId := "12345"
@@ -107,7 +107,7 @@ func TestSuccessfulPostBuyLimitOrder(t *testing.T) {
 
 		return &http.Response{
 			StatusCode: 200,
-			Body: resBodyFromJsonf("{\"id\": \"%s\"}", expectedId),
+			Body:       resBodyFromJsonf("{\"id\": \"%s\"}", expectedId),
 			Header: resHeaders(
 				"93af757fa082515e061483b197245709befc2cc25db3df013fe6696b9c164883",
 			),
@@ -124,8 +124,8 @@ func TestSuccessfulPostBuyLimitOrder(t *testing.T) {
 func TestSuccessfulPostSellLimitOrder(t *testing.T) {
 
 	order := exchangesdk.Order{
-		Type: exchangesdk.OrderTypeAsk,
-		Price: decimal.New(1234, -1),
+		Type:   exchangesdk.OrderTypeAsk,
+		Price:  decimal.New(1234, -1),
 		Volume: decimal.New(5678, -2),
 	}
 	expectedId := "12345"
@@ -157,7 +157,7 @@ func TestSuccessfulPostSellLimitOrder(t *testing.T) {
 
 		return &http.Response{
 			StatusCode: 200,
-			Body: resBodyFromJsonf("{\"id\": \"%s\"}", expectedId),
+			Body:       resBodyFromJsonf("{\"id\": \"%s\"}", expectedId),
 			Header: resHeaders(
 				"93af757fa082515e061483b197245709befc2cc25db3df013fe6696b9c164883",
 			),
@@ -174,8 +174,8 @@ func TestSuccessfulPostSellLimitOrder(t *testing.T) {
 func TestUnsuccessfulPostBuyLimitOrder(t *testing.T) {
 
 	order := exchangesdk.Order{
-		Type: exchangesdk.OrderTypeBid,
-		Price: decimal.New(1234, -1),
+		Type:   exchangesdk.OrderTypeBid,
+		Price:  decimal.New(1234, -1),
 		Volume: decimal.New(5678, -2),
 	}
 
@@ -206,7 +206,7 @@ func TestUnsuccessfulPostBuyLimitOrder(t *testing.T) {
 
 		return &http.Response{
 			StatusCode: 200,
-			Body: resBodyFromJsonf("{\"status\": \"error\", \"reason\": \"some error\"}"),
+			Body:       resBodyFromJsonf("{\"status\": \"error\", \"reason\": \"some error\"}"),
 			Header: resHeaders(
 				"085dd6e4f5d825e009bd2f1fc22faca64717c6591ca26c8cc37b81ebb7e12dbf",
 			),
@@ -221,8 +221,8 @@ func TestUnsuccessfulPostBuyLimitOrder(t *testing.T) {
 func TestPostLimitOrderWhichReturns4XX(t *testing.T) {
 
 	order := exchangesdk.Order{
-		Type: exchangesdk.OrderTypeBid,
-		Price: decimal.New(1234, -1),
+		Type:   exchangesdk.OrderTypeBid,
+		Price:  decimal.New(1234, -1),
 		Volume: decimal.New(5678, -2),
 	}
 
@@ -264,7 +264,7 @@ func TestPostLimitOrderWhichReturns4XX(t *testing.T) {
 func TestPostLimitOrderWithDefaultOrderTypeReturnsError(t *testing.T) {
 
 	order := exchangesdk.Order{
-		Price: decimal.New(1234, -1),
+		Price:  decimal.New(1234, -1),
 		Volume: decimal.New(5678, -2),
 	}
 
@@ -310,7 +310,7 @@ func TestSuccessfulStopOrder(t *testing.T) {
 
 		return &http.Response{
 			StatusCode: 200,
-			Body: resBodyFromJsonf("{\"id\": \"%s\"}", orderId),
+			Body:       resBodyFromJsonf("{\"id\": \"%s\"}", orderId),
 			Header: resHeaders(
 				"1937abed95d1402bf187584041b039471b025e8677b6faa75ef1f793e323c69d",
 			),
@@ -352,7 +352,7 @@ func TestUnsuccessfulStopOrder(t *testing.T) {
 
 		return &http.Response{
 			StatusCode: 200,
-			Body: resBodyFromJsonf("{\"error\": \"some_error\"}"),
+			Body:       resBodyFromJsonf("{\"error\": \"some_error\"}"),
 			Header: resHeaders(
 				"b721063e9d07f71eccf9f8b4861322fd4c877ef13f64cd9d61926150b21cc37b",
 			),
