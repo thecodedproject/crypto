@@ -60,11 +60,11 @@ func (c *client) GetOrderStatus(
 
 	if rand.Float64() < 0.5 {
 		return exchangesdk.OrderStatus{
-			State: exchangesdk.OrderStatePending,
+			State: exchangesdk.OrderStateInOrderBook,
 		}, nil
 	} else {
 		return exchangesdk.OrderStatus{
-			State: exchangesdk.OrderStateComplete,
+			State: exchangesdk.OrderStateFilled,
 			FillAmountBase: c.lastOrderVolume,
 		}, nil
 	}

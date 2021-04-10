@@ -2,7 +2,6 @@ package binance_test
 
 import (
 	"context"
-	//"fmt"
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -418,57 +417,70 @@ func TestSuccessfulGetOrderStatus(t *testing.T) {
 		expectedStatus exchangesdk.OrderStatus
 	}{
 		{
-			name: "Bid order, pending, no fill",
-			resBody: "{\"executedQty\": \"0.0\", \"status\": \"NEW\", \"side\": \"BUY\"}",
+			name: "Bid stop limit order, not triggered, no fill",
+			resBody: "{\"executedQty\": \"0.0\", \"status\": \"NEW\", \"side\": \"BUY\", \"isWorking\": false}",
 			expectedStatus: exchangesdk.OrderStatus{
-				State: exchangesdk.OrderStatePending,
+				State: exchangesdk.OrderStateAwaitingTrigger,
+				Type: exchangesdk.OrderTypeBid,
+				FillAmountBase: decimal.Decimal{},
+			},
+		},
+		{
+			name: "Bid order, pending, no fill",
+			resBody: "{\"executedQty\": \"0.0\", \"status\": \"NEW\", \"side\": \"BUY\", \"isWorking\": true}",
+			expectedStatus: exchangesdk.OrderStatus{
+				State: exchangesdk.OrderStateInOrderBook,
 				Type: exchangesdk.OrderTypeBid,
 				FillAmountBase: decimal.Decimal{},
 			},
 		},
 		{
 			name: "Bid order, pending, partial fill",
-			resBody: "{\"executedQty\": \"1.23\", \"status\": \"PARTIALLY_FILLED\", \"side\": \"BUY\"}",
+			resBody: "{\"executedQty\": \"1.23\", \"status\": \"PARTIALLY_FILLED\", \"side\": \"BUY\", \"isWorking\": true, \"cummulativeQuoteQty\": \"45.6\"}",
 			expectedStatus: exchangesdk.OrderStatus{
-				State: exchangesdk.OrderStatePending,
+				State: exchangesdk.OrderStateInOrderBook,
 				Type: exchangesdk.OrderTypeBid,
 				FillAmountBase: decimal.New(123, -2),
+				FillAmountCounter: decimal.New(456, -1),
 			},
 		},
 		{
 			name: "Bid order, completed, filled",
-			resBody: "{\"executedQty\": \"2.23\", \"status\": \"FILLED\", \"side\": \"BUY\"}",
+			resBody: "{\"executedQty\": \"2.23\", \"status\": \"FILLED\", \"side\": \"BUY\", \"isWorking\": true, \"cummulativeQuoteQty\": \"7.89\"}",
 			expectedStatus: exchangesdk.OrderStatus{
-				State: exchangesdk.OrderStateComplete,
+				State: exchangesdk.OrderStateFilled,
 				Type: exchangesdk.OrderTypeBid,
 				FillAmountBase: decimal.New(223, -2),
+				FillAmountCounter: decimal.New(789, -2),
 			},
 		},
 		{
 			name: "Ask order, pending, no fill",
-			resBody: "{\"executedQty\": \"0.0\", \"status\": \"NEW\", \"side\": \"SELL\"}",
+			resBody: "{\"executedQty\": \"0.0\", \"status\": \"NEW\", \"side\": \"SELL\", \"isWorking\": true}",
 			expectedStatus: exchangesdk.OrderStatus{
-				State: exchangesdk.OrderStatePending,
+				State: exchangesdk.OrderStateInOrderBook,
 				Type: exchangesdk.OrderTypeAsk,
 				FillAmountBase: decimal.Decimal{},
 			},
 		},
 		{
 			name: "Ask order, pending, partial fill",
-			resBody: "{\"executedQty\": \"1.23\", \"status\": \"PARTIALLY_FILLED\", \"side\": \"SELL\"}",
+			resBody: "{\"executedQty\": \"1.23\", \"status\": \"PARTIALLY_FILLED\", \"side\": \"SELL\", \"isWorking\": true, \"cummulativeQuoteQty\": \"4.89\"}",
 			expectedStatus: exchangesdk.OrderStatus{
-				State: exchangesdk.OrderStatePending,
+				State: exchangesdk.OrderStateInOrderBook,
 				Type: exchangesdk.OrderTypeAsk,
 				FillAmountBase: decimal.New(123, -2),
+				FillAmountCounter: decimal.New(489, -2),
 			},
 		},
 		{
 			name: "Ask order, completed, filled",
-			resBody: "{\"executedQty\": \"2.23\", \"status\": \"FILLED\", \"side\": \"SELL\"}",
+			resBody: "{\"executedQty\": \"4.23\", \"status\": \"FILLED\", \"side\": \"SELL\", \"isWorking\": true, \"cummulativeQuoteQty\": \"3.89\"}",
 			expectedStatus: exchangesdk.OrderStatus{
-				State: exchangesdk.OrderStateComplete,
+				State: exchangesdk.OrderStateFilled,
 				Type: exchangesdk.OrderTypeAsk,
-				FillAmountBase: decimal.New(223, -2),
+				FillAmountBase: decimal.New(423, -2),
+				FillAmountCounter: decimal.New(389, -2),
 			},
 		},
 	}

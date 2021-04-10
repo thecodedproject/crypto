@@ -15,18 +15,6 @@ const (
 	OrderTypeAsk OrderType = "ASK"
 )
 
-type OrderState string
-
-const (
-	OrderStatePending OrderState = "PENDING"
-	OrderStateComplete OrderState = "COMPLETE"
-)
-
-type OrderStatus struct {
-	State OrderState
-	Type OrderType
-	FillAmountBase decimal.Decimal
-}
 
 // TODO Rename to LimitOrder (this type represents a placed limit order only - and not a generic 'order')
 // In general, we are moving to a place where there is no single `Order` type, but specialisations of Order

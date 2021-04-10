@@ -139,7 +139,7 @@ func runCustom(
 	exchangeClient exchangesdk.Client,
 ) error {
 	fmt.Println("run custom...")
-	return postStopLimitOrder(ctx, exchangeClient)
+	return postLimitOrder(ctx, exchangeClient)
 }
 
 func runCommand(

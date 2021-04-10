@@ -218,8 +218,17 @@ func (l *client) GetOrderStatus(ctx context.Context, orderId string) (exchangesd
     return exchangesdk.OrderStatus{}, err
 	}
 
+	state := exchangesdk.OrderStateUnknown
+	if res.State == "PENDING" {
+		state = exchangesdk.OrderStateInOrderBook
+	} else if res.State == "COMPLETED" {
+		state = exchangesdk.OrderStateFilled
+	} else if res.State == "CANCELLED" {
+		state = exchangesdk.OrderStateCancelled
+	}
+
   return exchangesdk.OrderStatus{
-    State: exchangesdk.OrderState(res.State),
+    State: state,
     Type: exchangesdk.OrderType(res.Type),
 		FillAmountBase: fillAmountBase,
   }, nil

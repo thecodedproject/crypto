@@ -235,7 +235,9 @@ func (c *client) GetOrderStatus(
 	res := struct{
 		Status string `json:"status"`
 		Side string `json:"side"`
-		FillAmount decimal.Decimal `json:"executedQty"`
+		ExecutedQty decimal.Decimal `json:"executedQty"`
+		CummulativeQuoteQty decimal.Decimal `json:"cummulativeQuoteQty"`
+		IsWorking bool `json:"isWorking"`
 	}{}
 
 	err = json.Unmarshal(body, &res)
@@ -243,9 +245,17 @@ func (c *client) GetOrderStatus(
 		return exchangesdk.OrderStatus{}, err
 	}
 
-	state := exchangesdk.OrderStatePending
-	if res.Status == "FILLED" {
-		state = exchangesdk.OrderStateComplete
+	state := exchangesdk.OrderStateUnknown
+	if res.Status == "NEW" {
+		if res.IsWorking {
+			state = exchangesdk.OrderStateInOrderBook
+		} else {
+			state = exchangesdk.OrderStateAwaitingTrigger
+		}
+	} else if res.Status == "PARTIALLY_FILLED" {
+		state = exchangesdk.OrderStateInOrderBook
+	} else if res.Status == "FILLED" {
+		state = exchangesdk.OrderStateFilled
 	}
 
 	orderType := exchangesdk.OrderTypeBid
@@ -256,7 +266,8 @@ func (c *client) GetOrderStatus(
 	return exchangesdk.OrderStatus{
 		State: state,
 		Type: orderType,
-		FillAmountBase: res.FillAmount,
+		FillAmountBase: res.ExecutedQty,
+		FillAmountCounter: res.CummulativeQuoteQty,
 	}, nil
 }
 

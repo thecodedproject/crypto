@@ -7,6 +7,7 @@ import(
 )
 
 //go:generate enumer -type=OrderBookSide -trimprefix=OrderBookSide -json -text -transform=snake
+//go:generate enumer -type=OrderState -trimprefix=OrderState -json -text -transform=snake
 
 type OrderBook struct {
 
@@ -31,6 +32,17 @@ const (
 	OrderBookSideSentinal
 )
 
+type OrderState int
+
+const (
+	OrderStateUnknown OrderState = iota
+	OrderStateAwaitingTrigger
+	OrderStateInOrderBook
+	OrderStateFilled
+	OrderStateCancelled
+	OrderStateSentinal
+)
+
 // OrderBookTrade represents a trade as seen in the OrderBook
 type OrderBookTrade struct {
 	MakerSide OrderBookSide
@@ -44,4 +56,20 @@ type StopLimitOrder struct {
 	StopPrice decimal.Decimal
 	LimitPrice decimal.Decimal
 	Volume decimal.Decimal
+}
+
+type OrderStatus struct {
+	State OrderState
+	Type OrderType
+	FillAmountBase decimal.Decimal
+	FillAmountCounter decimal.Decimal
+}
+
+func (os OrderStatus) AverageFillPrice() decimal.Decimal {
+
+	if os.FillAmountBase.IsZero() {
+		return decimal.Decimal{}
+	}
+
+	return os.FillAmountCounter.Div(os.FillAmountBase)
 }
