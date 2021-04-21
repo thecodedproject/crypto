@@ -190,3 +190,17 @@ func (_m *Client) PostStopLimitOrder(ctx context.Context, o exchangesdk.StopLimi
 
 	return r0, r1
 }
+
+// TakerFee provides a mock function with given fields:
+func (_m *Client) TakerFee() decimal.Decimal {
+	ret := _m.Called()
+
+	var r0 decimal.Decimal
+	if rf, ok := ret.Get(0).(func() decimal.Decimal); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Get(0).(decimal.Decimal)
+	}
+
+	return r0
+}

@@ -81,6 +81,11 @@ func (c *client) MakerFee() decimal.Decimal {
 	return decimal.New(75, -5)
 }
 
+func (c *client) TakerFee() decimal.Decimal {
+
+	return decimal.New(75, -5)
+}
+
 func (c *client) CounterPrecision() int32 {
 
 	return 2

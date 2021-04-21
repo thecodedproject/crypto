@@ -193,6 +193,11 @@ func (l *client) MakerFee() decimal.Decimal {
 	return decimal.Decimal{}
 }
 
+func (c *client) TakerFee() decimal.Decimal {
+
+	return decimal.New(1, -3)
+}
+
 func (l *client) CounterPrecision() int32 {
 
 	return 2
