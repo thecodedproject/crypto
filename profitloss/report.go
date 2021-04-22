@@ -23,7 +23,7 @@ type Report struct {
 	CounterBought        decimal.Decimal `json:"counter_bought"`
 	CounterSold          decimal.Decimal `json:"counter_sold"`
 	CounterFees          decimal.Decimal `json:"counter_fees"`
-	OrderCount           int64           `json:"order_count"`
+	TradeCount           int64           `json:"trade_count"`
 }
 
 type Snapshot struct {
@@ -106,7 +106,7 @@ func Add(r Report, trades ...exchangesdk.Trade) Report {
 
 		r.CounterFees = r.CounterFees.Add(o.CounterFee)
 		r.BaseFees = r.BaseFees.Add(o.BaseFee)
-		r.OrderCount++
+		r.TradeCount++
 	}
 
 	return r

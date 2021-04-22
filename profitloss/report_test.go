@@ -32,7 +32,7 @@ func assertReportsEqual(t *testing.T, e, a profitloss.Report) {
 	assertDecimalsEqual(t, e.CounterBought, a.CounterBought, "CounterBought")
 	assertDecimalsEqual(t, e.CounterSold, a.CounterSold, "CounterSold")
 	assertDecimalsEqual(t, e.CounterFees, a.CounterFees, "CounterFees")
-	assert.Equal(t, e.OrderCount, a.OrderCount)
+	assert.Equal(t, e.TradeCount, a.TradeCount)
 }
 
 func D(f float64) decimal.Decimal {
@@ -341,7 +341,7 @@ func TestAddTradesToAveragePriceReport(t *testing.T) {
 				BaseSold:      D(16.0),
 				CounterBought: D(2620.0),
 				CounterSold:   D(3375.0),
-				OrderCount:    4,
+				TradeCount:    4,
 			},
 		},
 		{
@@ -373,7 +373,7 @@ func TestAddTradesToAveragePriceReport(t *testing.T) {
 				BaseSold:      D(40.0),
 				CounterBought: D(7250.0),
 				CounterSold:   D(5100.0),
-				OrderCount:    4,
+				TradeCount:    4,
 			},
 		},
 		{
@@ -410,7 +410,7 @@ func TestAddTradesToAveragePriceReport(t *testing.T) {
 				BaseFees:      D(11.0),
 				CounterBought: D(1980.0),
 				CounterSold:   D(3500.0),
-				OrderCount:    4,
+				TradeCount:    4,
 			},
 		},
 		{
@@ -447,7 +447,7 @@ func TestAddTradesToAveragePriceReport(t *testing.T) {
 				CounterBought: D(1260.0),
 				CounterSold:   D(1701.3),
 				CounterFees:   D(11.0),
-				OrderCount:    4,
+				TradeCount:    4,
 			},
 		},
 	}
