@@ -6,6 +6,8 @@ import (
 	context "context"
 
 	decimal "github.com/shopspring/decimal"
+	crypto "github.com/thecodedproject/crypto"
+
 	exchangesdk "github.com/thecodedproject/crypto/exchangesdk"
 
 	mock "github.com/stretchr/testify/mock"
@@ -65,6 +67,20 @@ func (_m *Client) CounterPrecision() int32 {
 		r0 = rf()
 	} else {
 		r0 = ret.Get(0).(int32)
+	}
+
+	return r0
+}
+
+// Exchange provides a mock function with given fields:
+func (_m *Client) Exchange() crypto.Exchange {
+	ret := _m.Called()
+
+	var r0 crypto.Exchange
+	if rf, ok := ret.Get(0).(func() crypto.Exchange); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Get(0).(crypto.Exchange)
 	}
 
 	return r0

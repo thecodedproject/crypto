@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"github.com/shopspring/decimal"
+
+	"github.com/thecodedproject/crypto"
 )
 
 // DEPRECATED: Use the MarketSide type instead
@@ -38,6 +40,8 @@ type Trade struct {
 }
 
 type Client interface {
+	Exchange() crypto.Exchange
+
 	LatestPrice(ctx context.Context) (decimal.Decimal, error)
 
 	GetOrderStatus(ctx context.Context, orderId string) (OrderStatus, error)

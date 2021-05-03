@@ -9,18 +9,9 @@ import (
 	"github.com/thecodedproject/crypto/exchangesdk"
 )
 
-type marketPair string
-
-const (
-	BTCEUR marketPair = "BTCEUR"
-)
-
-const (
-	baseUrl = "https://api.binance.com"
-)
-
 type client struct {
 	lastOrderVolume decimal.Decimal
+	pair            crypto.Pair
 }
 
 func NewClient(
@@ -29,7 +20,17 @@ func NewClient(
 	pair crypto.Pair,
 ) (*client, error) {
 
-	return &client{}, nil
+	return &client{
+		pair: pair,
+	}, nil
+}
+
+func (c *client) Exchange() crypto.Exchange {
+
+	return crypto.Exchange{
+		Provider: crypto.ApiProviderDummyExchange,
+		Pair:     c.pair,
+	}
 }
 
 func (c *client) LatestPrice(ctx context.Context) (decimal.Decimal, error) {

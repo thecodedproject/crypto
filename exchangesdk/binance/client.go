@@ -30,6 +30,7 @@ type client struct {
 	apiSecret   string
 	httpClient  *http.Client
 	tradingPair string
+	pair        crypto.Pair
 }
 
 var _ exchangesdk.Client = (*client)(nil)
@@ -88,6 +89,14 @@ func getBinanceTradingPair(pair crypto.Pair) (string, error) {
 		return "BCHBTC", nil
 	default:
 		return "", fmt.Errorf("Pair %s is not supported by exchagnesdk.Luno", pair)
+	}
+}
+
+func (c *client) Exchange() crypto.Exchange {
+
+	return crypto.Exchange{
+		Provider: crypto.ApiProviderBinance,
+		Pair:     c.pair,
 	}
 }
 

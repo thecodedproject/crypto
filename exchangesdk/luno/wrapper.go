@@ -32,6 +32,7 @@ type tradesAndLastSeq struct {
 
 type client struct {
 	lunoSdk      LunoSdk
+	pair         crypto.Pair
 	tradingPair  string
 	tradesByPage map[int64]tradesAndLastSeq
 }
@@ -81,6 +82,14 @@ func getLunoTradingPair(pair crypto.Pair) (string, error) {
 		return "BCHBTC", nil
 	default:
 		return "", fmt.Errorf("Pair %s is not supported by exchagnesdk.Luno", pair)
+	}
+}
+
+func (c *client) Exchange() crypto.Exchange {
+
+	return crypto.Exchange{
+		Provider: crypto.ApiProviderLuno,
+		Pair:     c.pair,
 	}
 }
 
