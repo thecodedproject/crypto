@@ -14,16 +14,16 @@ const (
 )
 
 type Report struct {
-	Type                 CalcType        `json:"type"`
-	InitalBaseBalance    decimal.Decimal `json:"initial_base_balance"`
-	BaseBought           decimal.Decimal `json:"base_bought"`
-	BaseSold             decimal.Decimal `json:"base_sold"`
-	BaseFees             decimal.Decimal `json:"base_fees"`
-	InitalCounterBalance decimal.Decimal `json:"initial_counter_balance"`
-	CounterBought        decimal.Decimal `json:"counter_bought"`
-	CounterSold          decimal.Decimal `json:"counter_sold"`
-	CounterFees          decimal.Decimal `json:"counter_fees"`
-	TradeCount           int64           `json:"trade_count"`
+	Type                  CalcType        `json:"type"`
+	InitialBaseBalance    decimal.Decimal `json:"initial_base_balance"`
+	BaseBought            decimal.Decimal `json:"base_bought"`
+	BaseSold              decimal.Decimal `json:"base_sold"`
+	BaseFees              decimal.Decimal `json:"base_fees"`
+	InitialCounterBalance decimal.Decimal `json:"initial_counter_balance"`
+	CounterBought         decimal.Decimal `json:"counter_bought"`
+	CounterSold           decimal.Decimal `json:"counter_sold"`
+	CounterFees           decimal.Decimal `json:"counter_fees"`
+	TradeCount            int64           `json:"trade_count"`
 }
 
 type Snapshot struct {
@@ -76,11 +76,11 @@ func (r Report) AverageSellPrice() decimal.Decimal {
 }
 
 func (r Report) BaseBalance() decimal.Decimal {
-	return r.InitalBaseBalance.Add(r.BaseBought).Sub(r.BaseSold).Sub(r.BaseFees)
+	return r.InitialBaseBalance.Add(r.BaseBought).Sub(r.BaseSold).Sub(r.BaseFees)
 }
 
 func (r Report) CounterBalance() decimal.Decimal {
-	return r.InitalCounterBalance.Add(r.CounterBought).Sub(r.CounterSold).Sub(r.CounterFees)
+	return r.InitialCounterBalance.Add(r.CounterBought).Sub(r.CounterSold).Sub(r.CounterFees)
 }
 
 func (r Report) TotalVolume() decimal.Decimal {

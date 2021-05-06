@@ -219,10 +219,10 @@ func TestAveragePriceReport_BaseBalance(t *testing.T) {
 		{
 			Name: "When inital base balance is not zero",
 			Report: profitloss.Report{
-				InitalBaseBalance: D(30.5),
-				BaseBought:        D(22.5),
-				BaseSold:          D(16.0),
-				BaseFees:          D(7.6),
+				InitialBaseBalance: D(30.5),
+				BaseBought:         D(22.5),
+				BaseSold:           D(16.0),
+				BaseFees:           D(7.6),
 			},
 			BaseBalance: D(29.4),
 		},
@@ -262,10 +262,10 @@ func TestAveragePriceReport_CounterBalance(t *testing.T) {
 		{
 			Name: "When inital counter balance is not zero",
 			Report: profitloss.Report{
-				InitalCounterBalance: D(12.5),
-				CounterBought:        D(22.5),
-				CounterSold:          D(16.0),
-				CounterFees:          D(7.6),
+				InitialCounterBalance: D(12.5),
+				CounterBought:         D(22.5),
+				CounterSold:           D(16.0),
+				CounterFees:           D(7.6),
 			},
 			CounterBalance: D(11.4),
 		},
@@ -305,7 +305,7 @@ func TestAddTradesToAveragePriceReport(t *testing.T) {
 
 	testCases := []struct {
 		Name     string
-		Inital   profitloss.Report
+		Initial  profitloss.Report
 		Trades   []exchangesdk.Trade
 		Expected profitloss.Report
 	}{
@@ -454,7 +454,7 @@ func TestAddTradesToAveragePriceReport(t *testing.T) {
 
 	for _, test := range testCases {
 		t.Run(test.Name, func(t *testing.T) {
-			report := profitloss.Add(test.Inital, test.Trades...)
+			report := profitloss.Add(test.Initial, test.Trades...)
 			assertReportsEqual(t, test.Expected, report)
 		})
 	}
