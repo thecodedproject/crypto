@@ -11,26 +11,23 @@ import (
 
 type client struct {
 	lastOrderVolume decimal.Decimal
-	pair            crypto.Pair
+	exchange        crypto.Exchange
 }
 
 func NewClient(
 	apiKey string,
 	apiSecret string,
-	pair crypto.Pair,
+	exchange crypto.Exchange,
 ) (*client, error) {
 
 	return &client{
-		pair: pair,
+		exchange: exchange,
 	}, nil
 }
 
 func (c *client) Exchange() crypto.Exchange {
 
-	return crypto.Exchange{
-		Provider: crypto.ApiProviderDummyExchange,
-		Pair:     c.pair,
-	}
+	return c.exchange
 }
 
 func (c *client) LatestPrice(ctx context.Context) (decimal.Decimal, error) {

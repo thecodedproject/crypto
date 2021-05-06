@@ -7,12 +7,12 @@ package crypto
 type ApiProvider int
 
 const (
-	ApiProviderUnknown       ApiProvider = 0
-	ApiProviderDummyExchange ApiProvider = 1
-	ApiProviderLuno          ApiProvider = 2
-	ApiProviderBinance       ApiProvider = 3
+	ApiProviderUnknown                    ApiProvider = 0
+	ApiProviderDummyExchange              ApiProvider = 1
+	ApiProviderLuno                       ApiProvider = 2
+	ApiProviderBinance                    ApiProvider = 3
 	ApiProviderDummyExchangeBinanceMarket ApiProvider = 4
-	ApiProviderSentinal      ApiProvider = 5
+	ApiProviderSentinal                   ApiProvider = 5
 )
 
 type AuthConfig struct {
