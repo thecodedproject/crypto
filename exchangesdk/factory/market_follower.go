@@ -26,6 +26,12 @@ func NewMarketFollower(
 			wg,
 			exchange.Pair,
 		)
+	case crypto.ApiProviderDummyExchangeBinanceMarket:
+		return binance.NewMarketFollower(
+			ctx,
+			wg,
+			exchange.Pair,
+		)
 	case crypto.ApiProviderLuno:
 		return luno.NewOrderBookFollowerAndTradeStream(
 			ctx,

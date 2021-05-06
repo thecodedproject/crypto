@@ -11,7 +11,8 @@ const (
 	ApiProviderDummyExchange ApiProvider = 1
 	ApiProviderLuno          ApiProvider = 2
 	ApiProviderBinance       ApiProvider = 3
-	ApiProviderSentinal      ApiProvider = 4
+	ApiProviderDummyExchangeBinanceMarket ApiProvider = 4
+	ApiProviderSentinal      ApiProvider = 5
 )
 
 type AuthConfig struct {

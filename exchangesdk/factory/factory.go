@@ -35,6 +35,12 @@ func NewClient(
 			apiSecret,
 			exchange.Pair,
 		)
+	case crypto.ApiProviderDummyExchangeBinanceMarket:
+		return dummyclient.NewClient(
+			apiKey,
+			apiSecret,
+			exchange.Pair,
+		)
 	default:
 		return nil, fmt.Errorf("Cannot create client; Unknown Api provider %s", exchange.Provider)
 	}

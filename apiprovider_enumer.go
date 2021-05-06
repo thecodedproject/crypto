@@ -8,9 +8,9 @@ import (
 	"fmt"
 )
 
-const _ApiProviderName = "unknowndummy_exchangelunobinancesentinal"
+const _ApiProviderName = "unknowndummy_exchangelunobinancedummy_exchange_binance_marketsentinal"
 
-var _ApiProviderIndex = [...]uint8{0, 7, 21, 25, 32, 40}
+var _ApiProviderIndex = [...]uint8{0, 7, 21, 25, 32, 61, 69}
 
 func (i ApiProvider) String() string {
 	if i < 0 || i >= ApiProvider(len(_ApiProviderIndex)-1) {
@@ -19,14 +19,15 @@ func (i ApiProvider) String() string {
 	return _ApiProviderName[_ApiProviderIndex[i]:_ApiProviderIndex[i+1]]
 }
 
-var _ApiProviderValues = []ApiProvider{0, 1, 2, 3, 4}
+var _ApiProviderValues = []ApiProvider{0, 1, 2, 3, 4, 5}
 
 var _ApiProviderNameToValueMap = map[string]ApiProvider{
 	_ApiProviderName[0:7]:   0,
 	_ApiProviderName[7:21]:  1,
 	_ApiProviderName[21:25]: 2,
 	_ApiProviderName[25:32]: 3,
-	_ApiProviderName[32:40]: 4,
+	_ApiProviderName[32:61]: 4,
+	_ApiProviderName[61:69]: 5,
 }
 
 // ApiProviderString retrieves an enum value from the enum constants string name.
