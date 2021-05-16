@@ -10,6 +10,7 @@ import (
 )
 
 type client struct {
+	lastOrderLimitPrice decimal.Decimal
 	lastOrderVolume decimal.Decimal
 	exchange        crypto.Exchange
 }
@@ -37,12 +38,14 @@ func (c *client) LatestPrice(ctx context.Context) (decimal.Decimal, error) {
 
 func (c *client) PostLimitOrder(ctx context.Context, order exchangesdk.Order) (string, error) {
 
+	c.lastOrderLimitPrice = order.Price
 	c.lastOrderVolume = order.Volume
 	return "some_order_id", nil
 }
 
 func (c *client) PostStopLimitOrder(ctx context.Context, order exchangesdk.StopLimitOrder) (string, error) {
 
+	c.lastOrderLimitPrice = order.LimitPrice
 	c.lastOrderVolume = order.Volume
 	return "some_order_id", nil
 }
@@ -65,6 +68,7 @@ func (c *client) GetOrderStatus(
 		return exchangesdk.OrderStatus{
 			State:          exchangesdk.OrderStateFilled,
 			FillAmountBase: c.lastOrderVolume,
+			FillAmountCounter: c.lastOrderLimitPrice.Mul(c.lastOrderVolume),
 		}, nil
 	}
 }
