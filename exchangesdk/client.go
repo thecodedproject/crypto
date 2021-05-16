@@ -29,16 +29,6 @@ type Order struct {
 	Volume    decimal.Decimal `json:"volume"`
 }
 
-type Trade struct {
-	OrderId    string
-	Timestamp  time.Time
-	Price      decimal.Decimal
-	Volume     decimal.Decimal
-	BaseFee    decimal.Decimal
-	CounterFee decimal.Decimal
-	Type       OrderType
-}
-
 type Client interface {
 	Exchange() crypto.Exchange
 

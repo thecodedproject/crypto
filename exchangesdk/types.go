@@ -72,3 +72,14 @@ func (os OrderStatus) AverageFillPrice() decimal.Decimal {
 
 	return os.FillAmountCounter.Div(os.FillAmountBase)
 }
+
+
+type Trade struct {
+	OrderId    string `json:"order_id"`
+	Timestamp  time.Time `json:"timestamp"`
+	Price      decimal.Decimal `json:"price"`
+	Volume     decimal.Decimal `json:"volume"`
+	BaseFee    decimal.Decimal `json:"base_fee"`
+	CounterFee decimal.Decimal `json:"counter_fee"`
+	Type       OrderType `json:"type"`
+}

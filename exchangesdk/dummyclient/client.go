@@ -12,6 +12,7 @@ import (
 type client struct {
 	lastOrderLimitPrice decimal.Decimal
 	lastOrderVolume decimal.Decimal
+	lastOrderSide exchangesdk.OrderBookSide
 	exchange        crypto.Exchange
 }
 
@@ -47,6 +48,7 @@ func (c *client) PostStopLimitOrder(ctx context.Context, order exchangesdk.StopL
 
 	c.lastOrderLimitPrice = order.LimitPrice
 	c.lastOrderVolume = order.Volume
+	c.lastOrderSide = order.Side
 	return "some_order_id", nil
 }
 
@@ -60,15 +62,25 @@ func (c *client) GetOrderStatus(
 	orderId string,
 ) (exchangesdk.OrderStatus, error) {
 
-	if rand.Float64() < 0.5 {
+	if r := rand.Float64(); r < 0.3 {
+		return exchangesdk.OrderStatus{
+			State: exchangesdk.OrderStateAwaitingTrigger,
+		}, nil
+	} else if r < 0.6 {
 		return exchangesdk.OrderStatus{
 			State: exchangesdk.OrderStateInOrderBook,
 		}, nil
 	} else {
+		orderType := exchangesdk.OrderTypeBid
+		if c.lastOrderSide == exchangesdk.OrderBookSideAsk {
+			orderType = exchangesdk.OrderTypeAsk
+		}
+
 		return exchangesdk.OrderStatus{
 			State:          exchangesdk.OrderStateFilled,
 			FillAmountBase: c.lastOrderVolume,
 			FillAmountCounter: c.lastOrderLimitPrice.Mul(c.lastOrderVolume),
+			Type: orderType,
 		}, nil
 	}
 }
