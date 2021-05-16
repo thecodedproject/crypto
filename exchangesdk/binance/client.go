@@ -51,6 +51,7 @@ func NewClient(
 		apiSecret:   apiSecret,
 		httpClient:  http.DefaultClient,
 		tradingPair: tradingPair,
+		pair: pair,
 	}, nil
 }
 
